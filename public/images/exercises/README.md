@@ -6,16 +6,45 @@ Coloque aqui as fotos dos exercícios em **JPG**, com o mesmo nome do `id` do ex
 Enquanto uma imagem não existir, o app mostra automaticamente `placeholder.jpg`.
 
 ```
-supino-reto.jpg            puxada-frontal.jpg      desenvolvimento.jpg
-supino-inclinado.jpg       remada-baixa.jpg        elevacao-lateral.jpg
-supino-reto-halteres.jpg   remada-curvada.jpg      elevacao-frontal.jpg
-crucifixo.jpg              remada-unilateral.jpg   crucifixo-inverso.jpg
-crossover.jpg              pulldown.jpg            agachamento.jpg
-paralelas.jpg              rosca-direta.jpg        leg-press.jpg
-triceps-pulley.jpg         rosca-martelo.jpg       cadeira-extensora.jpg
-triceps-frances.jpg        rosca-alternada.jpg     cadeira-flexora.jpg
-triceps-corda.jpg          stiff.jpg               afundo.jpg
-panturrilha.jpg
+supino-reto.jpg                   Supino reto com barra
+supino-inclinado-halteres.jpg     Supino inclinado com halteres
+crucifixo-maquina.jpg             Crucifixo na máquina
+supino-inclinado.jpg              Supino inclinado com barra
+supino-reto-halteres.jpg          Supino reto com halteres
+crossover.jpg                     Crossover
+desenvolvimento-halteres.jpg      Desenvolvimento com halteres
+elevacao-lateral.jpg              Elevação lateral
+desenvolvimento-maquina.jpg       Desenvolvimento na máquina
+elevacao-lateral-polia.jpg        Elevação lateral na máquina ou polia
+face-pull.jpg                     Face pull
+crucifixo-inverso.jpg             Crucifixo inverso
+triceps-pulley-corda.jpg          Tríceps pulley com corda
+triceps-frances.jpg               Tríceps francês
+triceps-testa.jpg                 Tríceps testa
+triceps-corda.jpg                 Tríceps corda
+puxada-frontal.jpg                Puxada frontal
+remada-baixa.jpg                  Remada baixa
+remada-unilateral.jpg             Remada unilateral com halter
+pulldown.jpg                      Pulldown com braços estendidos
+barra-fixa.jpg                    Barra fixa ou puxada alta
+remada-articulada.jpg             Remada articulada ou máquina
+remada-unilateral-maquina.jpg     Remada unilateral na máquina
+pullover-maquina.jpg              Pullover na máquina
+rosca-direta.jpg                  Rosca direta
+rosca-martelo.jpg                 Rosca martelo
+rosca-scott.jpg                   Rosca Scott
+rosca-alternada.jpg               Rosca alternada
+agachamento.jpg                   Agachamento livre
+leg-press.jpg                     Leg press
+cadeira-extensora.jpg             Cadeira extensora
+stiff.jpg                         Stiff com barra ou halteres
+mesa-flexora.jpg                  Mesa flexora
+panturrilha-em-pe.jpg             Panturrilha em pé
+hack-squat.jpg                    Hack squat
+stiff-halteres.jpg                Stiff com halteres
+cadeira-flexora.jpg               Cadeira flexora
+elevacao-pelvica.jpg              Elevação pélvica
+panturrilha-sentado.jpg           Panturrilha sentado
 ```
 
 Exercícios criados pelo app seguem a mesma regra: o nome do arquivo é o nome do

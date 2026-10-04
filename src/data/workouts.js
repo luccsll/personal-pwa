@@ -1,72 +1,86 @@
-// Treinos iniciais da semana.
+// Divisão Push / Pull / Legs (PPL) — hipertrofia, cada grupo 2x por semana.
 // dayOfWeek segue o padrão do JavaScript: 0 = domingo, 1 = segunda ... 6 = sábado.
-// Dias sem treino são considerados descanso.
+// Domingo não tem treino: é dia de descanso.
+//
+// Cada item do treino define séries, faixa de repetições (repetitions → repetitionsMax)
+// e descanso em segundos. Tudo pode ser editado depois pela tela "Editar treino".
 
-const item = (exerciseId, sets, repetitions, restTime = 90) => ({ exerciseId, sets, repetitions, restTime });
+import { estimateDuration } from '@/utils/workout';
 
-const workout = (id, name, dayOfWeek, muscleGroups, type, estimatedDuration, items) => ({
-  id,
-  name,
-  dayOfWeek,
-  muscleGroups,
-  type,
-  estimatedDuration,
-  exercises: items.map((it, index) => ({ id: `${id}-${index + 1}`, order: index + 1, ...it })),
+const item = (exerciseId, sets, repetitions, repetitionsMax, restTime) => ({
+  exerciseId,
+  sets,
+  repetitions,
+  repetitionsMax,
+  restTime,
 });
 
+const workout = (id, name, dayOfWeek, timeOfDay, muscleGroups, items) => {
+  const exercises = items.map((it, index) => ({ id: `${id}-${index + 1}`, order: index + 1, ...it }));
+  return {
+    id,
+    name,
+    dayOfWeek,
+    timeOfDay,
+    muscleGroups,
+    type: 'primary',
+    estimatedDuration: estimateDuration(exercises),
+    exercises,
+  };
+};
+
 export const initialWorkouts = [
-  workout('peito-triceps-a', 'Peito + Tríceps', 1, ['Peito', 'Tríceps'], 'primary', 50, [
-    item('supino-reto', 4, 10),
-    item('supino-inclinado', 3, 10),
-    item('crucifixo', 3, 12),
-    item('crossover', 3, 12),
-    item('triceps-pulley', 4, 10),
-    item('triceps-frances', 3, 10),
+  workout('push-a', 'Push A — Peito, Ombros e Tríceps', 1, 'Noite', ['Peito', 'Ombros', 'Tríceps'], [
+    item('supino-reto', 4, 6, 10, 150),
+    item('supino-inclinado-halteres', 3, 8, 12, 120),
+    item('crucifixo-maquina', 3, 10, 15, 90),
+    item('desenvolvimento-halteres', 3, 8, 12, 120),
+    item('elevacao-lateral', 3, 12, 15, 75),
+    item('triceps-pulley-corda', 3, 10, 15, 75),
+    item('triceps-frances', 2, 10, 15, 75),
   ]),
-  workout('peito-triceps-b', 'Peito + Tríceps Alternativo', 1, ['Peito', 'Tríceps'], 'alternative', 45, [
-    item('supino-reto-halteres', 4, 10),
-    item('supino-inclinado', 3, 10),
-    item('crossover', 3, 15),
-    item('paralelas', 3, 10),
-    item('triceps-corda', 3, 12),
+  workout('pull-a', 'Pull A — Costas e Bíceps', 2, 'Noite', ['Costas', 'Bíceps'], [
+    item('puxada-frontal', 4, 8, 12, 120),
+    item('remada-baixa', 3, 8, 12, 120),
+    item('remada-unilateral', 3, 8, 12, 90),
+    item('pulldown', 2, 12, 15, 75),
+    item('face-pull', 3, 12, 15, 75),
+    item('rosca-direta', 3, 8, 12, 90),
+    item('rosca-martelo', 3, 10, 12, 75),
   ]),
-  workout('costas-biceps-a', 'Costas + Bíceps', 2, ['Costas', 'Bíceps'], 'primary', 50, [
-    item('puxada-frontal', 4, 10),
-    item('remada-baixa', 4, 10),
-    item('remada-curvada', 3, 10),
-    item('pulldown', 3, 12),
-    item('rosca-direta', 3, 10),
-    item('rosca-martelo', 3, 12),
+  workout('legs-a', 'Legs A — Pernas', 3, 'Noite', ['Pernas'], [
+    item('agachamento', 4, 6, 10, 180),
+    item('leg-press', 3, 8, 12, 120),
+    item('cadeira-extensora', 3, 10, 15, 75),
+    item('stiff', 3, 8, 12, 120),
+    item('mesa-flexora', 3, 10, 15, 75),
+    item('panturrilha-em-pe', 4, 10, 15, 75),
   ]),
-  workout('costas-biceps-b', 'Costas + Bíceps Alternativo', 2, ['Costas', 'Bíceps'], 'alternative', 45, [
-    item('puxada-frontal', 4, 10),
-    item('remada-unilateral', 3, 10),
-    item('pulldown', 3, 12),
-    item('rosca-alternada', 3, 10),
-    item('rosca-martelo', 3, 12),
+  workout('push-b', 'Push B — Peito, Ombros e Tríceps', 4, 'Noite', ['Peito', 'Ombros', 'Tríceps'], [
+    item('supino-inclinado', 4, 6, 10, 150),
+    item('supino-reto-halteres', 3, 8, 12, 120),
+    item('crossover', 3, 10, 15, 75),
+    item('desenvolvimento-maquina', 3, 8, 12, 120),
+    item('elevacao-lateral-polia', 3, 12, 15, 75),
+    item('triceps-testa', 3, 8, 12, 90),
+    item('triceps-corda', 2, 12, 15, 75),
   ]),
-  workout('pernas-a', 'Pernas', 3, ['Pernas'], 'primary', 55, [
-    item('agachamento', 4, 10, 120),
-    item('leg-press', 4, 12, 120),
-    item('cadeira-extensora', 3, 12),
-    item('cadeira-flexora', 3, 12),
-    item('stiff', 3, 10),
-    item('panturrilha', 4, 15, 60),
+  workout('pull-b', 'Pull B — Costas e Bíceps', 5, 'Noite', ['Costas', 'Bíceps'], [
+    item('barra-fixa', 4, 6, 10, 150),
+    item('remada-articulada', 3, 8, 12, 120),
+    item('remada-unilateral-maquina', 3, 10, 12, 90),
+    item('pullover-maquina', 2, 10, 15, 75),
+    item('crucifixo-inverso', 3, 12, 15, 75),
+    item('rosca-scott', 3, 8, 12, 90),
+    item('rosca-alternada', 3, 10, 12, 75),
   ]),
-  workout('ombros-triceps-a', 'Ombros + Tríceps', 5, ['Ombros', 'Tríceps'], 'primary', 50, [
-    item('desenvolvimento', 4, 10),
-    item('elevacao-lateral', 4, 12, 60),
-    item('elevacao-frontal', 3, 12, 60),
-    item('crucifixo-inverso', 3, 12, 60),
-    item('triceps-pulley', 3, 12),
-    item('triceps-frances', 3, 10),
-  ]),
-  workout('pernas-b', 'Pernas', 6, ['Pernas'], 'primary', 50, [
-    item('leg-press', 4, 12, 120),
-    item('afundo', 3, 10),
-    item('cadeira-extensora', 3, 12),
-    item('cadeira-flexora', 3, 12),
-    item('stiff', 3, 10),
-    item('panturrilha', 4, 15, 60),
+  workout('legs-b', 'Legs B — Pernas', 6, 'Manhã', ['Pernas'], [
+    item('hack-squat', 4, 8, 12, 120),
+    item('leg-press', 3, 10, 15, 120),
+    item('cadeira-extensora', 3, 12, 15, 75),
+    item('stiff-halteres', 3, 8, 12, 120),
+    item('cadeira-flexora', 3, 10, 15, 75),
+    item('elevacao-pelvica', 3, 8, 12, 120),
+    item('panturrilha-sentado', 4, 12, 15, 75),
   ]),
 ];

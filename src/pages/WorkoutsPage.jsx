@@ -31,6 +31,7 @@ export default function WorkoutsPage() {
             <section key={day.index} className={`day-card card ${day.isToday ? 'day-card--today' : ''}`}>
               <header className="day-card__header">
                 <h2>{day.label.toUpperCase()}</h2>
+                {selected?.timeOfDay && <span className="day-card__time">{selected.timeOfDay}</span>}
                 {day.isToday && <Badge>Hoje</Badge>}
                 {day.done && (
                   <Badge tone="success" icon={CircleCheck}>
@@ -46,7 +47,11 @@ export default function WorkoutsPage() {
 
               {options.length === 0 ? (
                 <div className="day-card__rest">
-                  <Coffee size={18} /> Descanso
+                  <Coffee size={18} />
+                  <div>
+                    <strong>Dia de descanso</strong>
+                    <span>Recuperação também faz parte do treino.</span>
+                  </div>
                 </div>
               ) : (
                 <div className="day-card__options">

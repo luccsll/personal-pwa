@@ -1,14 +1,16 @@
-import { CircleCheck } from 'lucide-react';
+import { CircleCheck, TrendingUp } from 'lucide-react';
 import ExerciseImage from './ExerciseImage';
+import Badge from './Badge';
 import { useAppData } from '@/hooks/useAppData';
 import { useExerciseMap } from '@/hooks/useDerivedData';
 import { formatWeight } from '@/utils/format';
-import { getSessionSets } from '@/utils/stats';
+import { comparePerformance, getPreviousPerformance, getSessionSets } from '@/utils/stats';
+import { formatReps } from '@/utils/workout';
 import './SessionExercises.scss';
 
-/** Exercícios de um treino realizado com as cargas e repetições de cada série. */
+/** Exercícios de um treino realizado com as cargas, repetições e RIR de cada série. */
 export default function SessionExercises({ session }) {
-  const { records } = useAppData();
+  const { sessions, records } = useAppData();
   const exerciseMap = useExerciseMap();
 
   return (
@@ -16,6 +18,8 @@ export default function SessionExercises({ session }) {
       {session.exercises.map((item) => {
         const exercise = exerciseMap.get(item.exerciseId);
         const sets = getSessionSets(session.id, records, item.id).filter((s) => s.completed);
+        const previous = getPreviousPerformance(item.exerciseId, sessions, records, session.startedAt, session.id);
+        const improved = comparePerformance(sets, previous?.sets) === 'better';
         return (
           <article key={item.id} className="session-exercises__item card">
             <header>
@@ -23,11 +27,18 @@ export default function SessionExercises({ session }) {
               <div>
                 <h3>{exercise?.name ?? 'Exercício removido'}</h3>
                 <span className="secondary-text">
-                  {sets.length} de {item.sets} séries
+                  {sets.length} de {item.sets} séries · {formatReps(item)} reps
                 </span>
               </div>
               {sets.length >= item.sets && <CircleCheck size={20} className="session-exercises__check" />}
             </header>
+            {improved && (
+              <div>
+                <Badge tone="success" icon={TrendingUp}>
+                  Melhorou desde o treino anterior
+                </Badge>
+              </div>
+            )}
             {sets.length > 0 ? (
               <ol className="session-exercises__sets">
                 {sets.map((s) => (
@@ -35,6 +46,7 @@ export default function SessionExercises({ session }) {
                     <span>Série {s.setNumber}</span>
                     <strong>
                       {formatWeight(s.weight)} × {s.repetitions ?? '—'} reps
+                      {s.rir !== null && s.rir !== undefined && <small> · RIR {s.rir}</small>}
                     </strong>
                   </li>
                 ))}

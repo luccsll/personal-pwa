@@ -85,11 +85,9 @@ export function AppDataProvider({ children }) {
           id,
           name: name.trim(),
           muscleGroup,
+          type: 'isolation',
           image: `/images/exercises/${id}.jpg`,
           instructions: '',
-          sets: 3,
-          repetitions: 10,
-          restTime: 90,
         };
         update('exercises', (list) => [...list, exercise]);
         return exercise;
@@ -109,12 +107,13 @@ export function AppDataProvider({ children }) {
           workoutName: workout.name,
           muscleGroups: workout.muscleGroups,
           // Cópia dos exercícios: o histórico não muda se o treino for editado depois
-          exercises: workout.exercises.map(({ id, exerciseId, order, sets, repetitions, restTime }) => ({
+          exercises: workout.exercises.map(({ id, exerciseId, order, sets, repetitions, repetitionsMax, restTime }) => ({
             id,
             exerciseId,
             order,
             sets,
             repetitions,
+            repetitionsMax: repetitionsMax ?? null,
             restTime,
           })),
           startedAt: new Date().toISOString(),
@@ -127,6 +126,14 @@ export function AppDataProvider({ children }) {
         update('activeSessionId', () => session.id);
         return session.id;
       },
+
+      /**
+       * Cronômetro de descanso. Guarda o horário de término (e não um contador),
+       * assim continua correto mesmo com a tela bloqueada ou o app fechado.
+       * timer: { endsAt: ISO, duration: segundos, itemId } ou null para encerrar.
+       */
+      setRestTimer: (sessionId, restTimer) =>
+        update('sessions', (list) => list.map((s) => (s.id === sessionId ? { ...s, restTimer } : s))),
 
       setSessionIndex: (sessionId, currentIndex) =>
         update('sessions', (list) => list.map((s) => (s.id === sessionId ? { ...s, currentIndex } : s))),
@@ -173,7 +180,7 @@ export function AppDataProvider({ children }) {
         update('sessions', (list) =>
           list.map((s) =>
             s.id === sessionId
-              ? { ...s, finishedAt, duration: diffInMinutes(s.startedAt, finishedAt), completed: true }
+              ? { ...s, finishedAt, duration: diffInMinutes(s.startedAt, finishedAt), completed: true, restTimer: null }
               : s,
           ),
         );

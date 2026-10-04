@@ -16,7 +16,9 @@ export default function ExerciseHistory({ history, limit }) {
           <li key={entry.sessionId}>
             <span className="exercise-history__date">{formatDate(entry.date)}</span>
             <span className="exercise-history__sets">
-              {entry.sets.map((s) => `${formatWeight(s.weight).replace(' kg', '')}×${s.repetitions ?? '—'}`).join('  ')}
+              {entry.sets
+                .map((s) => `${formatWeight(s.weight).replace(' kg', '')}×${s.repetitions ?? '—'}${s.rir !== null && s.rir !== undefined ? ` @${s.rir}` : ''}`)
+                .join('  ')}
             </span>
             <strong className="exercise-history__weight">{formatWeight(entry.maxWeight)}</strong>
             {diff !== null && diff !== 0 && (

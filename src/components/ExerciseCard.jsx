@@ -1,7 +1,8 @@
 import { Link } from 'react-router-dom';
-import { ChevronRight, History } from 'lucide-react';
+import { ChevronRight, History, Timer } from 'lucide-react';
 import ExerciseImage from './ExerciseImage';
 import { formatWeight } from '@/utils/format';
+import { formatReps, formatRest } from '@/utils/workout';
 import './ExerciseCard.scss';
 
 /** Exercício dentro de um treino: imagem, séries × repetições e a última carga usada. */
@@ -13,7 +14,10 @@ export default function ExerciseCard({ exercise, item, index, lastPerformance, t
         <span className="exercise-card__index">{index + 1}</span>
         <h3>{exercise?.name ?? 'Exercício removido'}</h3>
         <p className="exercise-card__plan">
-          {item.sets} séries × {item.repetitions} repetições
+          {item.sets} séries × {formatReps(item)} reps
+          <span className="exercise-card__rest">
+            <Timer size={12} /> {formatRest(item.restTime)}
+          </span>
         </p>
         <p className="exercise-card__last">
           <History size={13} />

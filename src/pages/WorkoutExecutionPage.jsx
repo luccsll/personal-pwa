@@ -1,15 +1,17 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 import {
   ChevronLeft,
   ChevronRight,
   CircleCheck,
   Flag,
+  Gauge,
   History,
   LayoutList,
   Plus,
   SquareStack,
   Timer,
+  TrendingUp,
   X,
 } from 'lucide-react';
 import { useAppData } from '@/hooks/useAppData';
@@ -17,11 +19,15 @@ import { useExerciseMap } from '@/hooks/useDerivedData';
 import ExerciseImage from '@/components/ExerciseImage';
 import ProgressBar from '@/components/ProgressBar';
 import SetInput from '@/components/SetInput';
+import RestTimer from '@/components/RestTimer';
 import Button from '@/components/Button';
 import Modal from '@/components/Modal';
 import WorkoutSummary from '@/components/WorkoutSummary';
+import { RIR_RECOMMENDATION } from '@/data/initialData';
+import { formatDate } from '@/utils/date';
 import { formatWeight } from '@/utils/format';
-import { getLastPerformance } from '@/utils/stats';
+import { comparePerformance, getPreviousPerformance, reachedTopOfRange } from '@/utils/stats';
+import { formatReps, formatRest, topOfRange } from '@/utils/workout';
 import './WorkoutExecutionPage.scss';
 
 function ElapsedTime({ since }) {
@@ -45,10 +51,13 @@ const vibrate = () => {
   }
 };
 
+const formatSet = (s) => `${formatWeight(s.weight)} × ${s.repetitions ?? '—'}${s.rir !== null && s.rir !== undefined ? ` · RIR ${s.rir}` : ''}`;
+
 export default function WorkoutExecutionPage() {
   const { sessionId } = useParams();
   const navigate = useNavigate();
-  const { sessions, records, updateSet, setSessionIndex, addSessionSet, finishSession, deleteSession } = useAppData();
+  const { sessions, records, updateSet, setSessionIndex, addSessionSet, setRestTimer, finishSession, deleteSession } =
+    useAppData();
   const exerciseMap = useExerciseMap();
   const [view, setView] = useState('single');
   const [finishOpen, setFinishOpen] = useState(false);
@@ -66,18 +75,31 @@ export default function WorkoutExecutionPage() {
     return map;
   }, [records, sessionId]);
 
-  // Última execução de cada exercício (antes deste treino)
+  // Execução anterior de cada exercício (antes deste treino)
   const lastByExercise = useMemo(() => {
     const map = new Map();
     session?.exercises.forEach((item) => {
       if (!map.has(item.exerciseId)) {
-        map.set(item.exerciseId, getLastPerformance(item.exerciseId, sessions, records, sessionId));
+        map.set(item.exerciseId, getPreviousPerformance(item.exerciseId, sessions, records, session.startedAt, sessionId));
       }
     });
     return map;
-    // Só recalcula quando muda a sessão: o histórico anterior não muda durante o treino
+    // O histórico anterior não muda durante o treino
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionId, session?.exercises.length]);
+
+  const completedCount = (it) => [...(setsByItem.get(it.id)?.values() ?? [])].filter((r) => r.completed).length;
+  const isItemDone = (it) => completedCount(it) >= it.sets;
+  const allDone = Boolean(session && !session.completed && session.exercises.every(isItemDone));
+
+  // Ao concluir a última série do treino, abre a finalização automaticamente
+  const wasAllDone = useRef(allDone);
+  useEffect(() => {
+    if (allDone && !wasAllDone.current) setFinishOpen(true);
+    wasAllDone.current = allDone;
+  }, [allDone]);
+
+  const closeRest = useCallback(() => setRestTimer(sessionId, null), [setRestTimer, sessionId]);
 
   if (!session) return <Navigate to="/" replace />;
   if (session.completed) return <WorkoutSummary session={session} />;
@@ -87,27 +109,33 @@ export default function WorkoutExecutionPage() {
   const item = items[index];
   const exercise = exerciseMap.get(item.exerciseId);
   const last = lastByExercise.get(item.exerciseId);
+  const topReps = topOfRange(item);
 
-  const completedCount = (it) => [...(setsByItem.get(it.id)?.values() ?? [])].filter((r) => r.completed).length;
-  const isItemDone = (it) => completedCount(it) >= it.sets;
   const doneExercises = items.filter(isItemDone).length;
   const totalSetsDone = items.reduce((t, it) => t + completedCount(it), 0);
   const itemDone = isItemDone(item);
   const isLast = index === items.length - 1;
 
-  /** Valores exibidos em uma série: registro salvo ou sugestão (série anterior / último treino). */
+  /**
+   * Valores exibidos em uma série: o registro salvo ou, se ainda não houver,
+   * a mesma carga da série anterior (a 1ª série parte do último treino).
+   */
   const getSetValues = (setNumber) => {
-    const sets = setsByItem.get(item.id);
-    const saved = sets?.get(setNumber);
-    const previous = sets?.get(setNumber - 1);
-    const lastSet = last?.sets.find((s) => s.setNumber === setNumber) ?? last?.lastSet;
+    const saved = setsByItem.get(item.id)?.get(setNumber);
+    const previous = setNumber > 1 ? getSetValues(setNumber - 1) : null;
+    const lastSet = last?.sets.find((s) => s.setNumber === 1) ?? last?.lastSet;
     return {
       weight: saved?.weight ?? previous?.weight ?? lastSet?.weight ?? null,
       repetitions: saved?.repetitions ?? previous?.repetitions ?? lastSet?.repetitions ?? item.repetitions,
+      rir: saved?.rir ?? null,
       completed: Boolean(saved?.completed),
     };
   };
 
+  const currentSets = [...(setsByItem.get(item.id)?.values() ?? [])];
+  const comparison = comparePerformance(currentSets, last?.sets);
+  const suggestIncrease = reachedTopOfRange(currentSets, item.sets, topReps);
+  const lastHitTop = last ? reachedTopOfRange(last.sets, item.sets, topReps) : false;
   const firstOpenSet = Array.from({ length: item.sets }, (_, i) => i + 1).find((n) => !getSetValues(n).completed);
 
   const goTo = (i) => {
@@ -117,23 +145,47 @@ export default function WorkoutExecutionPage() {
   };
 
   const handleChange = (setNumber, patch) => {
-    const { weight, repetitions } = getSetValues(setNumber);
-    updateSet(session.id, item, setNumber, { weight, repetitions, ...patch });
+    const { weight, repetitions, rir } = getSetValues(setNumber);
+    updateSet(session.id, item, setNumber, { weight, repetitions, rir, ...patch });
+  };
+
+  const startRest = (seconds) => {
+    if (!seconds) return;
+    setRestTimer(session.id, {
+      itemId: item.id,
+      duration: seconds,
+      endsAt: new Date(Date.now() + seconds * 1000).toISOString(),
+    });
+  };
+
+  const adjustRest = (delta) => {
+    const timer = session.restTimer;
+    if (!timer) return;
+    const endsAt = Math.max(Date.now(), new Date(timer.endsAt).getTime() + delta * 1000);
+    setRestTimer(session.id, {
+      ...timer,
+      duration: Math.max(1, timer.duration + delta),
+      endsAt: new Date(endsAt).toISOString(),
+    });
   };
 
   const handleToggle = (setNumber) => {
     const values = getSetValues(setNumber);
     if (values.completed) {
       updateSet(session.id, item, setNumber, { completed: false });
-    } else {
-      vibrate();
-      updateSet(session.id, item, setNumber, {
-        weight: values.weight,
-        repetitions: values.repetitions,
-        completed: true,
-        completedAt: new Date().toISOString(),
-      });
+      return;
     }
+    vibrate();
+    updateSet(session.id, item, setNumber, {
+      weight: values.weight,
+      repetitions: values.repetitions,
+      rir: values.rir,
+      completed: true,
+      completedAt: new Date().toISOString(),
+    });
+    // Descanso automático, exceto após a última série do treino
+    const remainingSets = items.reduce((t, it) => t + Math.max(0, it.sets - completedCount(it)), 0);
+    if (remainingSets > 1) startRest(item.restTime);
   };
 
   const handleFinish = () => {
@@ -174,7 +226,7 @@ export default function WorkoutExecutionPage() {
             <strong>
               {doneExercises} / {items.length}
             </strong>{' '}
-            exercícios concluídos
+            exercícios
           </span>
           <span className="muted">{totalSetsDone} séries</span>
         </div>
@@ -196,7 +248,7 @@ export default function WorkoutExecutionPage() {
                 <div>
                   <strong>{ex?.name ?? 'Exercício'}</strong>
                   <span>
-                    {completedCount(it)} / {it.sets} séries · {it.repetitions} reps
+                    {completedCount(it)} / {it.sets} séries · {formatReps(it)} reps
                   </span>
                 </div>
                 {done ? <CircleCheck size={22} className="execution__list-check" /> : <ChevronRight size={20} />}
@@ -218,8 +270,18 @@ export default function WorkoutExecutionPage() {
               <h1>{exercise?.name ?? 'Exercício'}</h1>
               <p className="execution__group">{exercise?.muscleGroup}</p>
               <p className="execution__plan">
-                {item.sets} séries × {item.repetitions} repetições
+                {item.sets} × {formatReps(item)}
               </p>
+              <div className="execution__chips">
+                <span>
+                  <Timer size={13} /> Descanso {formatRest(item.restTime)}
+                </span>
+                {exercise?.type && (
+                  <span>
+                    <Gauge size={13} /> {RIR_RECOMMENDATION[exercise.type]}
+                  </span>
+                )}
+              </div>
               {exercise?.instructions && <p className="execution__instructions">{exercise.instructions}</p>}
             </div>
           </div>
@@ -227,17 +289,30 @@ export default function WorkoutExecutionPage() {
           <div className="execution__last">
             <History size={18} />
             <div>
-              <span>Último treino</span>
+              <span>Último treino{last ? ` · ${formatDate(last.date)}` : ''}</span>
               {last ? (
-                <strong>{last.sets.map((s) => `${formatWeight(s.weight)} × ${s.repetitions ?? '—'}`).join('   ·   ')}</strong>
+                <strong>{last.sets.map(formatSet).join('   ·   ')}</strong>
               ) : (
                 <strong>Primeira vez — escolha uma carga confortável</strong>
+              )}
+              {lastHitTop && !itemDone && (
+                <em className="execution__last-hint">Você atingiu o topo da faixa no último treino.</em>
               )}
             </div>
           </div>
 
-          {itemDone && (
-            <div className="execution__done-banner">
+          {comparison === 'better' && (
+            <div className="execution__banner execution__banner--success">
+              <TrendingUp size={20} /> Você melhorou sua performance neste exercício.
+            </div>
+          )}
+          {itemDone && suggestIncrease && (
+            <div className="execution__banner execution__banner--info">
+              <TrendingUp size={20} /> Considere aumentar a carga no próximo treino.
+            </div>
+          )}
+          {itemDone && !suggestIncrease && comparison !== 'better' && (
+            <div className="execution__banner execution__banner--success">
               <CircleCheck size={20} /> Exercício concluído!
             </div>
           )}
@@ -251,6 +326,7 @@ export default function WorkoutExecutionPage() {
                   setNumber={setNumber}
                   weight={values.weight}
                   repetitions={values.repetitions}
+                  rir={values.rir}
                   completed={values.completed}
                   active={setNumber === firstOpenSet}
                   onChange={(patch) => handleChange(setNumber, patch)}
@@ -265,9 +341,18 @@ export default function WorkoutExecutionPage() {
         </div>
       )}
 
+      {session.restTimer && <RestTimer timer={session.restTimer} onAdjust={adjustRest} onSkip={closeRest} />}
+
       {view === 'single' && (
         <nav className="execution__bottom">
-          <Button variant="secondary" size="lg" icon={ChevronLeft} disabled={index === 0} onClick={() => goTo(index - 1)} aria-label="Exercício anterior">
+          <Button
+            variant="secondary"
+            size="lg"
+            icon={ChevronLeft}
+            disabled={index === 0}
+            onClick={() => goTo(index - 1)}
+            aria-label="Exercício anterior"
+          >
             <span className="execution__bottom-label">Anterior</span>
           </Button>
           {isLast ? (
@@ -275,7 +360,13 @@ export default function WorkoutExecutionPage() {
               Finalizar treino
             </Button>
           ) : (
-            <Button variant={itemDone ? 'success' : 'primary'} size="lg" block iconRight={ChevronRight} onClick={() => goTo(index + 1)}>
+            <Button
+              variant={itemDone ? 'success' : 'primary'}
+              size="lg"
+              block
+              iconRight={ChevronRight}
+              onClick={() => goTo(index + 1)}
+            >
               Próximo exercício
             </Button>
           )}
@@ -285,10 +376,10 @@ export default function WorkoutExecutionPage() {
       <Modal
         open={finishOpen}
         onClose={() => setFinishOpen(false)}
-        title="Finalizar treino?"
+        title={allDone ? 'Todos os exercícios concluídos! 💪' : 'Finalizar treino?'}
         description={
-          doneExercises === items.length
-            ? 'Todos os exercícios foram concluídos. Mandou bem!'
+          allDone
+            ? 'Finalize para salvar o treino no histórico.'
             : `Você concluiu ${doneExercises} de ${items.length} exercícios. Séries não concluídas não serão salvas no histórico.`
         }
         footer={
@@ -297,11 +388,13 @@ export default function WorkoutExecutionPage() {
               Finalizar treino
             </Button>
             <Button variant="secondary" block onClick={() => setFinishOpen(false)}>
-              Continuar treinando
+              {allDone ? 'Revisar séries' : 'Continuar treinando'}
             </Button>
-            <Button variant="ghost" block className="execution__discard" onClick={handleDiscard}>
-              Descartar treino
-            </Button>
+            {!allDone && (
+              <Button variant="ghost" block className="execution__discard" onClick={handleDiscard}>
+                Descartar treino
+              </Button>
+            )}
           </>
         }
       >

@@ -30,6 +30,11 @@
     }
   }
 
+  &__time {
+    font-size: var(--fs-xs);
+    color: var(--text-muted);
+  }
+
   &__switch.btn {
     margin-left: auto;
     height: 32px;
@@ -53,6 +58,16 @@
     background: var(--bg-secondary);
     color: var(--text-muted);
     font-weight: 600;
+
+    div {
+      display: flex;
+      flex-direction: column;
+    }
+
+    span {
+      font-size: var(--fs-sm);
+      font-weight: 500;
+    }
   }
 
   &__add {

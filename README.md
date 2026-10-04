@@ -14,12 +14,30 @@ npm run preview   # serve o build localmente
 
 > Para hospedar, configure o servidor para redirecionar todas as rotas para `index.html` (SPA).
 
+## Treino (dados iniciais)
+
+Divisão **Push / Pull / Legs** para hipertrofia, cada grupo muscular 2× por semana:
+
+| Dia | Treino | Período |
+| --- | --- | --- |
+| Segunda | Push A — Peito, Ombros e Tríceps | Noite |
+| Terça | Pull A — Costas e Bíceps | Noite |
+| Quarta | Legs A — Pernas | Noite |
+| Quinta | Push B — Peito, Ombros e Tríceps | Noite |
+| Sexta | Pull B — Costas e Bíceps | Noite |
+| Sábado | Legs B — Pernas | Manhã |
+| Domingo | Descanso | — |
+
+Os treinos estão em `src/data/workouts.js` (séries, faixa de repetições e descanso de cada exercício)
+e podem ser editados pelo próprio app em **Treinos → abrir treino → editar**.
+Quem já usava uma versão anterior recebe os novos treinos automaticamente; o histórico é mantido.
+
 ## Funcionalidades
 
 - **Início** — saudação, treino do dia (com status, duração estimada e "Trocar treino"), peso atual, total de treinos, sequência, semana e resumo da evolução.
 - **Meus treinos** — semana de segunda a domingo, várias opções de treino por dia (Treino A/B), troca do treino da semana, criação e edição de treinos.
 - **Detalhes do treino / exercício** — lista de exercícios com imagem, séries × repetições e a última carga usada.
-- **Execução do treino** — um exercício por vez (ou lista completa), registro de peso/repetições por série com sugestão da última carga, salvamento automático (sobrevive a recarregar a página), progresso e tela de "Treino concluído!" com horário de início/fim.
+- **Execução do treino** — um exercício por vez (ou lista completa), registro de peso, repetições e RIR opcional por série, "Último treino" de cada exercício, cronômetro de descanso automático (com +30s / −15s / Pular), salvamento automático (o treino continua de onde parou mesmo se o app for fechado), aviso quando a performance melhora e sugestão para aumentar a carga ao atingir o topo da faixa de repetições. Ao final: duração, exercícios, séries, volume e comparação com o treino anterior.
 - **Evolução** — carga por exercício (gráfico, maior carga, última carga, evolução, últimas repetições), peso corporal e recordes.
 - **Meu peso** — registro por data, peso atual/inicial/maior/menor, gráfico e IMC.
 - **Histórico** — todos os treinos realizados com as cargas de cada série.

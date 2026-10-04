@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Check, Minus, Plus } from 'lucide-react';
 import { parseDecimal } from '@/utils/format';
+import { RIR_OPTIONS } from '@/data/initialData';
 import './SetInput.scss';
 
 function Stepper({ label, unit, value, step, onChange, disabled, decimal }) {
@@ -50,8 +51,32 @@ function Stepper({ label, unit, value, step, onChange, disabled, decimal }) {
   );
 }
 
-/** Registro de uma série: peso, repetições e botão de concluir. */
-export default function SetInput({ setNumber, weight, repetitions, completed, active, onChange, onToggle }) {
+/** RIR opcional: toque para marcar, toque de novo para limpar. */
+function RirPicker({ value, onChange }) {
+  return (
+    <div className="rir-picker" role="group" aria-label="RIR (repetições em reserva), opcional">
+      <span className="rir-picker__label">
+        RIR <small>opcional</small>
+      </span>
+      <div className="rir-picker__options">
+        {RIR_OPTIONS.map((n) => (
+          <button
+            key={n}
+            type="button"
+            className={value === n ? 'is-selected' : ''}
+            aria-pressed={value === n}
+            onClick={() => onChange(value === n ? null : n)}
+          >
+            {n}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/** Registro de uma série: peso, repetições, RIR (opcional) e botão de concluir. */
+export default function SetInput({ setNumber, weight, repetitions, rir, completed, active, onChange, onToggle }) {
   const canComplete = weight !== null && repetitions !== null && repetitions > 0;
 
   return (
@@ -69,6 +94,8 @@ export default function SetInput({ setNumber, weight, repetitions, completed, ac
         <Stepper label="Peso" unit="kg" value={weight} step={2.5} decimal onChange={(v) => onChange({ weight: v })} />
         <Stepper label="Reps" unit="reps" value={repetitions} step={1} onChange={(v) => onChange({ repetitions: v })} />
       </div>
+
+      <RirPicker value={rir ?? null} onChange={(v) => onChange({ rir: v })} />
 
       <button
         type="button"

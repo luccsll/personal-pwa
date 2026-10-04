@@ -89,7 +89,7 @@ export default function WorkoutEditorPage() {
     patch({
       exercises: [
         ...form.exercises,
-        { exerciseId: exercise.id, sets: exercise.sets ?? 3, repetitions: exercise.repetitions ?? 10, restTime: exercise.restTime ?? 90 },
+        { exerciseId: exercise.id, sets: 3, repetitions: 8, repetitionsMax: 12, restTime: exercise.type === 'compound' ? 120 : 75 },
       ],
       muscleGroups:
         exercise.muscleGroup && !form.muscleGroups.includes(exercise.muscleGroup)
@@ -146,6 +146,15 @@ export default function WorkoutEditorPage() {
             </select>
           </label>
         </div>
+        <label className="field">
+          <span>Período</span>
+          <select className="input" value={form.timeOfDay ?? ''} onChange={(e) => patch({ timeOfDay: e.target.value || null })}>
+            <option value="">Não definido</option>
+            <option value="Manhã">Manhã</option>
+            <option value="Tarde">Tarde</option>
+            <option value="Noite">Noite</option>
+          </select>
+        </label>
         <div className="field">
           <span>Grupos musculares</span>
           <div className="editor__chips">
@@ -202,9 +211,22 @@ export default function WorkoutEditorPage() {
                   </button>
                 </div>
               </div>
-              <div className="grid-3">
+              <div className="editor__fields">
                 <NumberField label="Séries" value={item.sets} max={10} onChange={(v) => patchItem(index, { sets: v })} />
-                <NumberField label="Repetições" value={item.repetitions} max={100} onChange={(v) => patchItem(index, { repetitions: v })} />
+                <NumberField
+                  label="Reps mín."
+                  value={item.repetitions}
+                  max={100}
+                  onChange={(v) =>
+                    patchItem(index, { repetitions: v, repetitionsMax: Math.max(v, item.repetitionsMax ?? v) })
+                  }
+                />
+                <NumberField
+                  label="Reps máx."
+                  value={item.repetitionsMax ?? item.repetitions}
+                  max={100}
+                  onChange={(v) => patchItem(index, { repetitionsMax: v, repetitions: Math.min(v, item.repetitions) })}
+                />
                 <NumberField label="Descanso (s)" value={item.restTime ?? 90} min={0} max={600} onChange={(v) => patchItem(index, { restTime: v })} />
               </div>
             </div>

@@ -1,4 +1,4 @@
-import { Clock, Dumbbell, Play, Repeat2, CircleCheck, Coffee } from 'lucide-react';
+import { Clock, Dumbbell, Play, Repeat2, CircleCheck, Coffee, Moon, Sun } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import Button from './Button';
 import Badge from './Badge';
@@ -22,7 +22,7 @@ export default function FeaturedWorkoutCard({ workout, status = 'pending', onSta
           <Coffee size={28} strokeWidth={1.8} />
         </div>
         <h2 className="featured-card__title">Dia de descanso</h2>
-        <p className="featured-card__subtitle">Recupere as energias. O descanso também faz parte do treino.</p>
+        <p className="featured-card__subtitle">Recuperação também faz parte do treino.</p>
         {nextWorkout && (
           <p className="featured-card__next">
             Próximo: <strong>{nextWorkout.dayLabel}</strong> — {nextWorkout.workout.name}
@@ -56,6 +56,11 @@ export default function FeaturedWorkoutCard({ workout, status = 'pending', onSta
         <span>
           <Clock size={16} /> ~{getWorkoutDuration(workout)} minutos
         </span>
+        {workout.timeOfDay && (
+          <span>
+            {workout.timeOfDay === 'Manhã' ? <Sun size={16} /> : <Moon size={16} />} {workout.timeOfDay}
+          </span>
+        )}
       </div>
 
       <div className="featured-card__actions">

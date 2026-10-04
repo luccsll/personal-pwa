@@ -168,3 +168,53 @@
     transform: scale(1);
   }
 }
+
+.rir-picker {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+
+  &__label {
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+
+    small {
+      font-weight: 500;
+      text-transform: none;
+      letter-spacing: 0;
+      color: var(--text-muted);
+      margin-left: 2px;
+    }
+  }
+
+  &__options {
+    display: flex;
+    gap: 6px;
+
+    button {
+      @include pressable;
+      width: 44px;
+      height: 40px;
+      border-radius: var(--radius-md);
+      background: var(--bg-input);
+      border: 1px solid var(--border-default);
+      font-weight: 700;
+      color: var(--text-secondary);
+
+      &.is-selected {
+        background: var(--primary-500);
+        border-color: var(--primary-500);
+        color: var(--text-inverse);
+      }
+    }
+  }
+}
+
+.set-input.is-completed .rir-picker__options button:not(.is-selected) {
+  background: rgba(255, 255, 255, 0.7);
+  border-color: var(--success-border);
+}

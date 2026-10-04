@@ -28,3 +28,19 @@ export function estimateDuration(exercises = []) {
 
 export const getWorkoutDuration = (workout) =>
   workout?.estimatedDuration ?? estimateDuration(workout?.exercises);
+
+/** "6–10" para faixas ou "10" para repetições fixas. */
+export function formatReps(item) {
+  if (!item) return '';
+  const max = item.repetitionsMax;
+  return max && max !== item.repetitions ? `${item.repetitions}–${max}` : `${item.repetitions}`;
+}
+
+/** Topo da faixa de repetições do item. */
+export const topOfRange = (item) => item?.repetitionsMax ?? item?.repetitions ?? 0;
+
+/** 150 -> "2:30" */
+export function formatRest(seconds = 0) {
+  const s = Math.max(0, Math.round(seconds));
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+}

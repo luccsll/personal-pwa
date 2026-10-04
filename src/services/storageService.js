@@ -3,7 +3,7 @@
 // Para migrar para uma API no futuro, basta reimplementar estas funções
 // mantendo as mesmas assinaturas (ou versões assíncronas delas).
 
-import { initialData } from '@/data/initialData';
+import { DATA_VERSION, initialData } from '@/data/initialData';
 
 export const STORAGE_KEYS = {
   profile: 'myworkout_profile',
@@ -14,6 +14,7 @@ export const STORAGE_KEYS = {
   bodyWeight: 'myworkout_body_weight',
   activeSession: 'myworkout_active_session',
   weekSelection: 'myworkout_week_selection',
+  dataVersion: 'myworkout_data_version',
 };
 
 // ---------- Acesso de baixo nível ----------
@@ -83,6 +84,7 @@ const validators = {
               order: isNumber(x.order) ? x.order : i + 1,
               sets: isNumber(x.sets) && x.sets > 0 ? x.sets : 3,
               repetitions: isNumber(x.repetitions) ? x.repetitions : 10,
+              repetitionsMax: isNumber(x.repetitionsMax) && x.repetitionsMax >= x.repetitions ? x.repetitionsMax : null,
               restTime: isNumber(x.restTime) ? x.restTime : 90,
             }))
             .sort((a, b) => a.order - b.order),
@@ -100,6 +102,7 @@ const validators = {
           ...r,
           weight: toNumberOrNull(r.weight),
           repetitions: toNumberOrNull(r.repetitions),
+          rir: toNumberOrNull(r.rir),
           completed: Boolean(r.completed),
         }
       : null,
@@ -116,14 +119,44 @@ function readList(key, validate, fallback) {
 
 // ---------- Inicialização ----------
 
-/** Grava os dados iniciais (treinos e exercícios de exemplo) na primeira execução. */
+/** Grava os dados iniciais (treinos e exercícios) na primeira execução. */
 export function initializeStorage() {
+  const isFirstRun = read(STORAGE_KEYS.workouts) === undefined;
   if (read(STORAGE_KEYS.profile) === undefined) write(STORAGE_KEYS.profile, initialData.profile);
   if (read(STORAGE_KEYS.exercises) === undefined) write(STORAGE_KEYS.exercises, initialData.exercises);
   if (read(STORAGE_KEYS.workouts) === undefined) write(STORAGE_KEYS.workouts, initialData.workouts);
   if (read(STORAGE_KEYS.sessions) === undefined) write(STORAGE_KEYS.sessions, initialData.sessions);
   if (read(STORAGE_KEYS.records) === undefined) write(STORAGE_KEYS.records, initialData.records);
   if (read(STORAGE_KEYS.bodyWeight) === undefined) write(STORAGE_KEYS.bodyWeight, initialData.bodyWeight);
+
+  const version = read(STORAGE_KEYS.dataVersion);
+  if (!isFirstRun && (!isNumber(version) || version < DATA_VERSION)) migrateSeedData();
+  write(STORAGE_KEYS.dataVersion, DATA_VERSION);
+}
+
+/**
+ * Atualiza treinos e exercícios para a versão atual dos dados iniciais,
+ * preservando histórico, séries registradas, peso corporal e perfil.
+ */
+function migrateSeedData() {
+  const sessions = readList(STORAGE_KEYS.sessions, validators.session, []);
+  const records = readList(STORAGE_KEYS.records, validators.record, []);
+  const usedIds = new Set([
+    ...records.map((r) => r.exerciseId),
+    ...sessions.flatMap((s) => s.exercises.map((e) => e.exerciseId)),
+  ]);
+  const seedIds = new Set(initialData.exercises.map((e) => e.id));
+  // Exercícios antigos só são mantidos se fizerem parte do histórico
+  const legacy = readList(STORAGE_KEYS.exercises, validators.exercise, []).filter(
+    (e) => !seedIds.has(e.id) && usedIds.has(e.id),
+  );
+
+  write(STORAGE_KEYS.exercises, [...initialData.exercises, ...legacy]);
+  write(STORAGE_KEYS.workouts, initialData.workouts);
+  write(STORAGE_KEYS.weekSelection, null);
+
+  const profile = validators.profile(read(STORAGE_KEYS.profile));
+  if (profile && !profile.goal) write(STORAGE_KEYS.profile, { ...profile, goal: initialData.profile.goal });
 }
 
 // ---------- Dados pessoais ----------

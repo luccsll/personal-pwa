@@ -160,3 +160,66 @@ export function bmiCategory(bmi) {
   if (bmi < 40) return 'Obesidade grau II';
   return 'Obesidade grau III';
 }
+
+// ---------- Progressão ----------
+
+/** Execução anterior de um exercício, antes de uma data (ex.: início do treino atual). */
+export function getPreviousPerformance(exerciseId, sessions, records, beforeDate, excludeSessionId) {
+  const history = getExerciseHistory(exerciseId, sessions, records, { excludeSessionId });
+  const before = history.filter((h) => new Date(h.date) < new Date(beforeDate));
+  return before[before.length - 1] ?? null;
+}
+
+const setScore = (s) => (s.weight ?? 0) * (s.repetitions ?? 0);
+
+/**
+ * Compara as séries concluídas com as do treino anterior (mesmo número de série).
+ * Retorna 'better' | 'same' | 'worse' ou null quando não há como comparar.
+ * Ex.: 30 kg × 8 -> 30 kg × 10 = 'better'.
+ */
+export function comparePerformance(currentSets, previousSets) {
+  if (!previousSets?.length) return null;
+  const previousByNumber = new Map(previousSets.map((s) => [s.setNumber, s]));
+  const matched = currentSets.filter((s) => s.completed && previousByNumber.has(s.setNumber));
+  if (!matched.length) return null;
+  const current = matched.reduce((t, s) => t + setScore(s), 0);
+  const previous = matched.reduce((t, s) => t + setScore(previousByNumber.get(s.setNumber)), 0);
+  if (current > previous) return 'better';
+  if (current < previous) return 'worse';
+  return 'same';
+}
+
+/**
+ * Atingiu o topo da faixa de repetições em todas as séries planejadas?
+ * Séries registradas com RIR 0 (falha) não contam como "boa execução".
+ */
+export function reachedTopOfRange(sets, plannedSets, topReps) {
+  const completed = sets.filter((s) => s.completed);
+  if (!topReps || completed.length < plannedSets) return false;
+  return completed.every((s) => (s.repetitions ?? 0) >= topReps && s.rir !== 0);
+}
+
+/** Totais de um treino: séries concluídas, exercícios realizados e volume (kg × reps). */
+export function getSessionTotals(sessionId, records) {
+  const sets = records.filter((r) => r.sessionId === sessionId && r.completed);
+  return {
+    sets: sets.length,
+    exercises: new Set(sets.map((s) => s.itemId)).size,
+    volume: sets.reduce((t, s) => t + setScore(s), 0),
+  };
+}
+
+/** Último treino concluído do mesmo modelo antes deste. */
+export function getPreviousSession(session, sessions) {
+  return (
+    sessions
+      .filter(
+        (s) =>
+          s.completed &&
+          s.id !== session.id &&
+          s.workoutId === session.workoutId &&
+          new Date(s.startedAt) < new Date(session.startedAt),
+      )
+      .sort((a, b) => new Date(b.startedAt) - new Date(a.startedAt))[0] ?? null
+  );
+}
