@@ -21,7 +21,11 @@ npm run build     # build de produção (gera o service worker / PWA)
 npm run preview   # serve o build localmente
 ```
 
-> Para hospedar, configure o servidor para redirecionar todas as rotas para `index.html` (SPA).
+### Publicar na Vercel
+
+O `vercel.json` já configura o build (Vite → `dist`), o redirecionamento das rotas da SPA para `index.html`
+e o cache do service worker. Basta importar o repositório em [vercel.com/new](https://vercel.com/new)
+ou rodar `npx vercel --prod` na pasta do projeto.
 
 ## Treino (dados iniciais)
 
