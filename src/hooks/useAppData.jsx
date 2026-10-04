@@ -3,6 +3,7 @@ import * as storage from '@/services/storageService';
 import { createId, slugify } from '@/utils/id';
 import { diffInMinutes, getWeekStart, toDateKey } from '@/utils/date';
 import { estimateDuration } from '@/utils/workout';
+import { DEFAULT_USER } from '@/data/users';
 
 const AppDataContext = createContext(null);
 
@@ -22,7 +23,9 @@ const PERSIST = {
  * é persistida imediatamente (salvamento automático).
  */
 export function AppDataProvider({ children }) {
-  const [state, setState] = useState(() => storage.loadAll());
+  // Sem usuário escolhido ainda: carrega o padrão e mostra "Quem está treinando hoje?"
+  const [selectedUser, setSelectedUser] = useState(() => storage.getSelectedUser());
+  const [state, setState] = useState(() => storage.loadAll(selectedUser ?? DEFAULT_USER));
   const stateRef = useRef(state);
 
   const update = useCallback((key, producer) => {
@@ -37,6 +40,15 @@ export function AppDataProvider({ children }) {
     const get = () => stateRef.current;
 
     return {
+      // ----- Usuário ativo (Lucas / Anthony) -----
+      /** Troca o usuário ativo. Os dados do outro usuário continuam salvos. */
+      selectUser: (userId) => {
+        storage.saveSelectedUser(userId);
+        stateRef.current = storage.loadAll(userId);
+        setState(stateRef.current);
+        setSelectedUser(userId);
+      },
+
       // ----- Perfil -----
       updateProfile: (patch) => update('profile', (p) => ({ ...p, ...patch })),
 
@@ -116,6 +128,8 @@ export function AppDataProvider({ children }) {
             repetitionsMax: repetitionsMax ?? null,
             restTime,
           })),
+          cardioMinutes: get().profile.cardioMinutes ?? null,
+          cardioDone: false,
           startedAt: new Date().toISOString(),
           finishedAt: null,
           duration: null,
@@ -134,6 +148,9 @@ export function AppDataProvider({ children }) {
        */
       setRestTimer: (sessionId, restTimer) =>
         update('sessions', (list) => list.map((s) => (s.id === sessionId ? { ...s, restTimer } : s))),
+
+      setSessionCardio: (sessionId, cardioDone) =>
+        update('sessions', (list) => list.map((s) => (s.id === sessionId ? { ...s, cardioDone } : s))),
 
       setSessionIndex: (sessionId, currentIndex) =>
         update('sessions', (list) => list.map((s) => (s.id === sessionId ? { ...s, currentIndex } : s))),
@@ -198,7 +215,10 @@ export function AppDataProvider({ children }) {
     };
   }, [update]);
 
-  const value = useMemo(() => ({ ...state, ...actions }), [state, actions]);
+  const value = useMemo(
+    () => ({ ...state, needsUserSelection: !selectedUser, ...actions }),
+    [state, selectedUser, actions],
+  );
 
   return <AppDataContext.Provider value={value}>{children}</AppDataContext.Provider>;
 }

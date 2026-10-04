@@ -106,3 +106,22 @@ export const initialExercises = [
   exercise('panturrilha-sentado', 'Panturrilha sentado', 'Panturrilha', 'isolation',
     'Joelhos a 90°. Suba na ponta dos pés, segure no topo e desça alongando.'),
 ];
+
+// ---------- Abdômen (treino de pernas do Anthony) ----------
+// bodyweight: o peso padrão é 0 kg (peso do corpo).
+// unit 'seconds': as "repetições" são registradas em segundos (ex.: prancha).
+export const abdominalExercises = [
+  exercise('maquina-abdominal', 'Máquina abdominal', 'Abdômen', 'isolation',
+    'Ajuste o peso, encaixe os pés e flexione o tronco contraindo o abdômen, sem puxar com os braços.'),
+  {
+    ...exercise('elevacao-pernas', 'Elevação de pernas', 'Abdômen', 'isolation',
+      'Apoiado no banco ou na barra, eleve as pernas controlando a descida, sem balançar o corpo.'),
+    bodyweight: true,
+  },
+  {
+    ...exercise('prancha', 'Prancha', 'Abdômen', 'isolation',
+      'Apoie antebraços e pontas dos pés, mantenha o corpo alinhado e o abdômen contraído.'),
+    bodyweight: true,
+    unit: 'seconds',
+  },
+];

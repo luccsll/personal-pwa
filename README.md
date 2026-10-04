@@ -1,7 +1,16 @@
 # MyWorkout
 
 Aplicativo web pessoal (PWA) para acompanhar treinos de academia, cargas, peso corporal e evolução.
-Uso individual: sem login, sem backend — todos os dados ficam no `localStorage` do navegador.
+Usado por **Lucas e Anthony**, sem login e sem backend — todos os dados ficam no `localStorage` do navegador.
+
+## Usuários
+
+No primeiro acesso o app pergunta **"Quem está treinando hoje?"** (Lucas ou Anthony). A escolha fica salva
+no aparelho (`localStorage.selectedUser`) e pode ser trocada em **Meus dados → Trocar usuário**
+(ou no rodapé da barra lateral no desktop).
+
+Cada usuário tem dados totalmente independentes — treinos, histórico, cargas, peso e dados pessoais —
+guardados em chaves próprias: `myworkout_lucas_*` e `myworkout_anthony_*`.
 
 ## Rodando
 
@@ -16,7 +25,11 @@ npm run preview   # serve o build localmente
 
 ## Treino (dados iniciais)
 
-Divisão **Push / Pull / Legs** para hipertrofia, cada grupo muscular 2× por semana:
+Divisão **Push / Pull / Legs**, cada grupo muscular 2× por semana. Lucas e Anthony treinam juntos,
+então a musculação é a mesma; as diferenças são:
+
+- **Cardio:** Lucas 10 min, Anthony 20 min (editável em Meus dados).
+- **Abdômen (Anthony):** Legs A + máquina abdominal e elevação de pernas; Legs B + máquina abdominal e prancha.
 
 | Dia | Treino | Período |
 | --- | --- | --- |
@@ -30,7 +43,7 @@ Divisão **Push / Pull / Legs** para hipertrofia, cada grupo muscular 2× por se
 
 Os treinos estão em `src/data/workouts.js` (séries, faixa de repetições e descanso de cada exercício)
 e podem ser editados pelo próprio app em **Treinos → abrir treino → editar**.
-Quem já usava uma versão anterior recebe os novos treinos automaticamente; o histórico é mantido.
+Quem já usava uma versão anterior tem os dados movidos automaticamente para o Lucas; o histórico é mantido.
 
 ## Funcionalidades
 
@@ -41,7 +54,7 @@ Quem já usava uma versão anterior recebe os novos treinos automaticamente; o h
 - **Evolução** — carga por exercício (gráfico, maior carga, última carga, evolução, últimas repetições), peso corporal e recordes.
 - **Meu peso** — registro por data, peso atual/inicial/maior/menor, gráfico e IMC.
 - **Histórico** — todos os treinos realizados com as cargas de cada série.
-- **Meus dados** — nome, altura, peso e objetivo.
+- **Meus dados** — nome, idade, altura, peso, cardio, objetivo, foco e **Trocar usuário**.
 
 ## Estrutura
 

@@ -41,6 +41,39 @@
     gap: 4px;
   }
 
+  &__user {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    margin-top: auto;
+    padding: var(--space-md);
+    border-radius: var(--radius-lg);
+    background: var(--bg-secondary);
+    color: var(--text-muted);
+    transition: background var(--transition);
+
+    > span:not(.user-avatar) {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    strong {
+      color: var(--text-primary);
+    }
+
+    small {
+      font-size: var(--fs-xs);
+      color: var(--text-secondary);
+    }
+
+    &:hover {
+      background: var(--primary-50);
+      color: var(--primary-500);
+    }
+  }
+
   &__item {
     display: flex;
     align-items: center;

@@ -76,8 +76,9 @@ function RirPicker({ value, onChange }) {
 }
 
 /** Registro de uma série: peso, repetições, RIR (opcional) e botão de concluir. */
-export default function SetInput({ setNumber, weight, repetitions, rir, completed, active, onChange, onToggle }) {
-  const canComplete = weight !== null && repetitions !== null && repetitions > 0;
+export default function SetInput({ setNumber, weight, repetitions, rir, completed, active, timed = false, onChange, onToggle }) {
+  // Exercícios por tempo (prancha) não usam carga
+  const canComplete = (timed || weight !== null) && repetitions !== null && repetitions > 0;
 
   return (
     <div className={`set-input ${completed ? 'is-completed' : ''} ${active ? 'is-active' : ''}`}>
@@ -90,9 +91,15 @@ export default function SetInput({ setNumber, weight, repetitions, rir, complete
         )}
       </div>
 
-      <div className="set-input__fields">
-        <Stepper label="Peso" unit="kg" value={weight} step={2.5} decimal onChange={(v) => onChange({ weight: v })} />
-        <Stepper label="Reps" unit="reps" value={repetitions} step={1} onChange={(v) => onChange({ repetitions: v })} />
+      <div className={`set-input__fields ${timed ? 'set-input__fields--single' : ''}`}>
+        {!timed && (
+          <Stepper label="Peso" unit="kg" value={weight} step={2.5} decimal onChange={(v) => onChange({ weight: v })} />
+        )}
+        {timed ? (
+          <Stepper label="Tempo" unit="seg" value={repetitions} step={5} onChange={(v) => onChange({ repetitions: v })} />
+        ) : (
+          <Stepper label="Reps" unit="reps" value={repetitions} step={1} onChange={(v) => onChange({ repetitions: v })} />
+        )}
       </div>
 
       <RirPicker value={rir ?? null} onChange={(v) => onChange({ rir: v })} />

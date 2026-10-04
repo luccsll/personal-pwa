@@ -23,11 +23,12 @@ import RestTimer from '@/components/RestTimer';
 import Button from '@/components/Button';
 import Modal from '@/components/Modal';
 import WorkoutSummary from '@/components/WorkoutSummary';
+import CardioCard from '@/components/CardioCard';
+import UserAvatar from '@/components/UserAvatar';
 import { RIR_RECOMMENDATION } from '@/data/initialData';
 import { formatDate } from '@/utils/date';
-import { formatWeight } from '@/utils/format';
 import { comparePerformance, getPreviousPerformance, reachedTopOfRange } from '@/utils/stats';
-import { formatReps, formatRest, topOfRange } from '@/utils/workout';
+import { formatReps, formatRest, formatSetValue, isTimed, repsUnit, topOfRange } from '@/utils/workout';
 import './WorkoutExecutionPage.scss';
 
 function ElapsedTime({ since }) {
@@ -51,13 +52,25 @@ const vibrate = () => {
   }
 };
 
-const formatSet = (s) => `${formatWeight(s.weight)} × ${s.repetitions ?? '—'}${s.rir !== null && s.rir !== undefined ? ` · RIR ${s.rir}` : ''}`;
+const formatSet = (s, exercise) =>
+  `${formatSetValue(s, exercise)}${s.rir !== null && s.rir !== undefined ? ` · RIR ${s.rir}` : ''}`;
 
 export default function WorkoutExecutionPage() {
   const { sessionId } = useParams();
   const navigate = useNavigate();
-  const { sessions, records, updateSet, setSessionIndex, addSessionSet, setRestTimer, finishSession, deleteSession } =
-    useAppData();
+  const {
+    userId,
+    profile,
+    sessions,
+    records,
+    updateSet,
+    setSessionIndex,
+    addSessionSet,
+    setRestTimer,
+    setSessionCardio,
+    finishSession,
+    deleteSession,
+  } = useAppData();
   const exerciseMap = useExerciseMap();
   const [view, setView] = useState('single');
   const [finishOpen, setFinishOpen] = useState(false);
@@ -110,6 +123,11 @@ export default function WorkoutExecutionPage() {
   const exercise = exerciseMap.get(item.exerciseId);
   const last = lastByExercise.get(item.exerciseId);
   const topReps = topOfRange(item);
+  const timed = isTimed(exercise);
+  // Peso do corpo / prancha começam com 0 kg
+  const defaultWeight = timed || exercise?.bodyweight ? 0 : null;
+  const cardioMinutes = session.cardioMinutes ?? profile.cardioMinutes;
+  const toggleCardio = () => setSessionCardio(session.id, !session.cardioDone);
 
   const doneExercises = items.filter(isItemDone).length;
   const totalSetsDone = items.reduce((t, it) => t + completedCount(it), 0);
@@ -125,7 +143,7 @@ export default function WorkoutExecutionPage() {
     const previous = setNumber > 1 ? getSetValues(setNumber - 1) : null;
     const lastSet = last?.sets.find((s) => s.setNumber === 1) ?? last?.lastSet;
     return {
-      weight: saved?.weight ?? previous?.weight ?? lastSet?.weight ?? null,
+      weight: saved?.weight ?? previous?.weight ?? lastSet?.weight ?? defaultWeight,
       repetitions: saved?.repetitions ?? previous?.repetitions ?? lastSet?.repetitions ?? item.repetitions,
       rir: saved?.rir ?? null,
       completed: Boolean(saved?.completed),
@@ -208,6 +226,7 @@ export default function WorkoutExecutionPage() {
         <div className="execution__title">
           <strong>{session.workoutName}</strong>
           <span>
+            <UserAvatar userId={userId} name={profile.name} size="sm" /> {profile.name} ·{' '}
             <Timer size={13} /> <ElapsedTime since={session.startedAt} />
           </span>
         </div>
@@ -248,13 +267,14 @@ export default function WorkoutExecutionPage() {
                 <div>
                   <strong>{ex?.name ?? 'Exercício'}</strong>
                   <span>
-                    {completedCount(it)} / {it.sets} séries · {formatReps(it)} reps
+                    {completedCount(it)} / {it.sets} séries · {formatReps(it)} {repsUnit(ex)}
                   </span>
                 </div>
                 {done ? <CircleCheck size={22} className="execution__list-check" /> : <ChevronRight size={20} />}
               </button>
             );
           })}
+          <CardioCard minutes={cardioMinutes} done={session.cardioDone} onToggle={toggleCardio} />
           <Button variant="success" size="lg" block icon={Flag} onClick={() => setFinishOpen(true)}>
             Finalizar treino
           </Button>
@@ -271,6 +291,7 @@ export default function WorkoutExecutionPage() {
               <p className="execution__group">{exercise?.muscleGroup}</p>
               <p className="execution__plan">
                 {item.sets} × {formatReps(item)}
+                {timed ? ' segundos' : ''}
               </p>
               <div className="execution__chips">
                 <span>
@@ -291,9 +312,9 @@ export default function WorkoutExecutionPage() {
             <div>
               <span>Último treino{last ? ` · ${formatDate(last.date)}` : ''}</span>
               {last ? (
-                <strong>{last.sets.map(formatSet).join('   ·   ')}</strong>
+                <strong>{last.sets.map((s) => formatSet(s, exercise)).join('   ·   ')}</strong>
               ) : (
-                <strong>Primeira vez — escolha uma carga confortável</strong>
+                <strong>{timed ? 'Primeira vez — registre o tempo que aguentar' : 'Primeira vez — escolha uma carga confortável'}</strong>
               )}
               {lastHitTop && !itemDone && (
                 <em className="execution__last-hint">Você atingiu o topo da faixa no último treino.</em>
@@ -328,6 +349,7 @@ export default function WorkoutExecutionPage() {
                   repetitions={values.repetitions}
                   rir={values.rir}
                   completed={values.completed}
+                  timed={timed}
                   active={setNumber === firstOpenSet}
                   onChange={(patch) => handleChange(setNumber, patch)}
                   onToggle={() => handleToggle(setNumber)}
@@ -338,6 +360,8 @@ export default function WorkoutExecutionPage() {
               <Plus size={16} /> Adicionar série
             </button>
           </div>
+
+          {isLast && <CardioCard minutes={cardioMinutes} done={session.cardioDone} onToggle={toggleCardio} />}
         </div>
       )}
 
@@ -398,6 +422,7 @@ export default function WorkoutExecutionPage() {
           </>
         }
       >
+        {cardioMinutes > 0 && <CardioCard minutes={cardioMinutes} done={session.cardioDone} onToggle={toggleCardio} />}
         {totalSetsDone === 0 && <p className="muted">Conclua pelo menos uma série para salvar o treino.</p>}
       </Modal>
     </div>

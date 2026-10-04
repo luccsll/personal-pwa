@@ -11,6 +11,34 @@
     gap: var(--space-md);
   }
 
+  &__user {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+
+    > div {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+
+      span {
+        font-size: var(--fs-sm);
+      }
+
+      strong {
+        font-size: var(--fs-subtitle);
+      }
+    }
+  }
+
+  &__focus.input {
+    height: auto;
+    padding: 12px 14px;
+    line-height: 1.5;
+    resize: vertical;
+  }
+
   &__label {
     font-size: var(--fs-sm);
     font-weight: 600;
@@ -29,8 +57,11 @@
     align-items: center;
     justify-content: center;
     gap: 6px;
-    height: 48px;
+    min-height: 48px;
+    padding: 6px 10px;
     border-radius: var(--radius-button);
+    text-align: center;
+    line-height: 1.2;
     background: var(--bg-input);
     border: 1px solid var(--border-default);
     font-weight: 600;

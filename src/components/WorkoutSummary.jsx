@@ -3,6 +3,7 @@ import { CalendarDays, Clock, Dumbbell, House, Layers, PartyPopper, Weight } fro
 import { useAppData } from '@/hooks/useAppData';
 import Button from './Button';
 import SessionExercises from './SessionExercises';
+import CardioCard from './CardioCard';
 import { formatDate, formatDuration, formatTime } from '@/utils/date';
 import { formatNumber, formatSigned } from '@/utils/format';
 import { getPreviousSession, getSessionTotals } from '@/utils/stats';
@@ -16,7 +17,7 @@ function Diff({ value, suffix = '', neutral = false }) {
 
 /** Tela exibida ao finalizar um treino. */
 export default function WorkoutSummary({ session }) {
-  const { sessions, records } = useAppData();
+  const { sessions, records, setSessionCardio } = useAppData();
   const totals = getSessionTotals(session.id, records);
   const previous = getPreviousSession(session, sessions);
   const previousTotals = previous ? getSessionTotals(previous.id, records) : null;
@@ -61,6 +62,12 @@ export default function WorkoutSummary({ session }) {
           <span>volume total</span>
         </div>
       </div>
+
+      <CardioCard
+        minutes={session.cardioMinutes}
+        done={Boolean(session.cardioDone)}
+        onToggle={() => setSessionCardio(session.id, !session.cardioDone)}
+      />
 
       <section className="section">
         <h2>Comparação com o treino anterior</h2>

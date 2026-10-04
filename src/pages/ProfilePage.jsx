@@ -1,9 +1,11 @@
 import { useState } from 'react';
-import { Check, Save } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { ArrowLeftRight, Check, Save } from 'lucide-react';
 import { useAppData } from '@/hooks/useAppData';
 import { useBodyWeightStats } from '@/hooks/useDerivedData';
 import PageHeader from '@/components/PageHeader';
 import Button from '@/components/Button';
+import UserAvatar from '@/components/UserAvatar';
 import { GOALS } from '@/data/initialData';
 import { toDateKey } from '@/utils/date';
 import { formatNumber, parseDecimal } from '@/utils/format';
@@ -13,7 +15,7 @@ import './ProfilePage.scss';
 const toInput = (n) => (n === null || n === undefined ? '' : String(n).replace('.', ','));
 
 export default function ProfilePage() {
-  const { profile, updateProfile, addBodyWeight } = useAppData();
+  const { userId, profile, updateProfile, addBodyWeight } = useAppData();
   const weightStats = useBodyWeightStats();
   const currentWeight = weightStats?.current.weight ?? null;
 
@@ -21,7 +23,10 @@ export default function ProfilePage() {
     name: profile.name ?? '',
     height: toInput(profile.height),
     weight: toInput(currentWeight),
+    age: toInput(profile.age),
+    cardioMinutes: toInput(profile.cardioMinutes),
     goal: profile.goal,
+    focus: profile.focus ?? '',
   }));
   const [saved, setSaved] = useState(false);
 
@@ -36,7 +41,16 @@ export default function ProfilePage() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    updateProfile({ name: form.name.trim(), height: height && height > 50 ? height : null, goal: form.goal });
+    const age = parseDecimal(form.age);
+    const cardioMinutes = parseDecimal(form.cardioMinutes);
+    updateProfile({
+      name: form.name.trim(),
+      age: age && age > 0 ? Math.round(age) : null,
+      height: height && height > 50 ? height : null,
+      cardioMinutes: cardioMinutes !== null ? Math.round(cardioMinutes) : null,
+      goal: form.goal,
+      focus: form.focus.trim(),
+    });
     // Peso alterado aqui vira um novo registro de peso corporal
     if (weight && weight !== currentWeight) addBodyWeight({ weight, date: toDateKey() });
     setSaved(true);
@@ -45,6 +59,17 @@ export default function ProfilePage() {
   return (
     <div className="page--narrow profile">
       <PageHeader back title="Meus dados" />
+
+      <div className="card profile__user">
+        <UserAvatar userId={userId} name={profile.name} size="lg" />
+        <div>
+          <span className="secondary-text">Treinando agora</span>
+          <strong>{profile.name}</strong>
+        </div>
+        <Button as={Link} to="/trocar-usuario" variant="secondary" icon={ArrowLeftRight}>
+          Trocar usuário
+        </Button>
+      </div>
 
       <form className="profile__form" onSubmit={handleSubmit}>
         <div className="card stack">
@@ -74,6 +99,28 @@ export default function ProfilePage() {
               />
             </label>
           </div>
+          <div className="grid-2">
+            <label className="field">
+              <span>Idade</span>
+              <input
+                className="input"
+                inputMode="numeric"
+                placeholder="Ex.: 30"
+                value={form.age}
+                onChange={(e) => set('age')(e.target.value.replace(/\D/g, ''))}
+              />
+            </label>
+            <label className="field">
+              <span>Cardio (min)</span>
+              <input
+                className="input"
+                inputMode="numeric"
+                placeholder="Ex.: 20"
+                value={form.cardioMinutes}
+                onChange={(e) => set('cardioMinutes')(e.target.value.replace(/\D/g, ''))}
+              />
+            </label>
+          </div>
         </div>
 
         <div className="card stack">
@@ -92,6 +139,16 @@ export default function ProfilePage() {
               </button>
             ))}
           </div>
+          <label className="field">
+            <span>Foco</span>
+            <textarea
+              className="input profile__focus"
+              rows={3}
+              placeholder="Ex.: ganhar massa muscular nos braços"
+              value={form.focus}
+              onChange={set('focus')}
+            />
+          </label>
         </div>
 
         <div className="card profile__bmi">

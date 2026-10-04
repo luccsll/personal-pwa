@@ -171,6 +171,8 @@ export function getPreviousPerformance(exerciseId, sessions, records, beforeDate
 }
 
 const setScore = (s) => (s.weight ?? 0) * (s.repetitions ?? 0);
+// Para comparar performance: sem carga (peso do corpo, prancha) vale o número de reps/segundos
+const performanceScore = (s) => ((s.weight ?? 0) > 0 ? setScore(s) : s.repetitions ?? 0);
 
 /**
  * Compara as séries concluídas com as do treino anterior (mesmo número de série).
@@ -182,8 +184,8 @@ export function comparePerformance(currentSets, previousSets) {
   const previousByNumber = new Map(previousSets.map((s) => [s.setNumber, s]));
   const matched = currentSets.filter((s) => s.completed && previousByNumber.has(s.setNumber));
   if (!matched.length) return null;
-  const current = matched.reduce((t, s) => t + setScore(s), 0);
-  const previous = matched.reduce((t, s) => t + setScore(previousByNumber.get(s.setNumber)), 0);
+  const current = matched.reduce((t, s) => t + performanceScore(s), 0);
+  const previous = matched.reduce((t, s) => t + performanceScore(previousByNumber.get(s.setNumber)), 0);
   if (current > previous) return 'better';
   if (current < previous) return 'worse';
   return 'same';

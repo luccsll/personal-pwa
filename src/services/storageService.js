@@ -3,19 +3,34 @@
 // Para migrar para uma API no futuro, basta reimplementar estas funções
 // mantendo as mesmas assinaturas (ou versões assíncronas delas).
 
-import { DATA_VERSION, initialData } from '@/data/initialData';
+import { DATA_VERSION, getInitialData } from '@/data/initialData';
+import { DEFAULT_USER, isValidUser } from '@/data/users';
 
-export const STORAGE_KEYS = {
-  profile: 'myworkout_profile',
-  workouts: 'myworkout_workouts',
-  exercises: 'myworkout_exercises',
-  sessions: 'myworkout_sessions',
-  records: 'myworkout_records',
-  bodyWeight: 'myworkout_body_weight',
-  activeSession: 'myworkout_active_session',
-  weekSelection: 'myworkout_week_selection',
-  dataVersion: 'myworkout_data_version',
+// Cada usuário (Lucas, Anthony) tem seus próprios dados:
+// myworkout_<usuario>_<dado>, ex.: myworkout_lucas_records, myworkout_anthony_records.
+const DATA_KEYS = {
+  profile: 'profile',
+  workouts: 'workouts',
+  exercises: 'exercises',
+  sessions: 'sessions',
+  records: 'records',
+  bodyWeight: 'body_weight',
+  activeSession: 'active_session',
+  weekSelection: 'week_selection',
+  dataVersion: 'data_version',
 };
+
+/** Usuário escolhido na tela "Quem está treinando hoje?" (guardado no aparelho). */
+export const SELECTED_USER_KEY = 'selectedUser';
+
+let currentUser = DEFAULT_USER;
+
+const STORAGE_KEYS = new Proxy(DATA_KEYS, {
+  get: (keys, name) => `myworkout_${currentUser}_${keys[name]}`,
+});
+
+/** Chaves da versão de um usuário só (antes de existir o Anthony) — migradas para o Lucas. */
+const legacyKey = (name) => `myworkout_${DATA_KEYS[name]}`;
 
 // ---------- Acesso de baixo nível ----------
 
@@ -53,9 +68,12 @@ const validators = {
   profile: (p) =>
     isObject(p)
       ? {
-          name: typeof p.name === 'string' ? p.name : initialData.profile.name,
+          name: typeof p.name === 'string' ? p.name : seed().profile.name,
+          age: toNumberOrNull(p.age),
           height: toNumberOrNull(p.height),
           goal: typeof p.goal === 'string' ? p.goal : null,
+          focus: typeof p.focus === 'string' ? p.focus : '',
+          cardioMinutes: toNumberOrNull(p.cardioMinutes),
         }
       : null,
 
@@ -117,61 +135,120 @@ function readList(key, validate, fallback) {
   return value.map(validate).filter(Boolean);
 }
 
+// ---------- Usuário ativo ----------
+
+export function getSelectedUser() {
+  const id = readRaw(SELECTED_USER_KEY);
+  return isValidUser(id) ? id : null;
+}
+
+export function saveSelectedUser(id) {
+  try {
+    // Valor simples ("lucas" / "anthony"), sem JSON
+    window.localStorage.setItem(SELECTED_USER_KEY, id);
+  } catch (error) {
+    console.error('[storage] Falha ao salvar o usuário', error);
+  }
+}
+
+/** Define de qual usuário os dados serão lidos/gravados a partir de agora. */
+export function setActiveUser(id) {
+  currentUser = isValidUser(id) ? id : DEFAULT_USER;
+}
+
+function readRaw(key) {
+  try {
+    return window.localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+const seed = () => getInitialData(currentUser);
+
 // ---------- Inicialização ----------
 
-/** Grava os dados iniciais (treinos e exercícios) na primeira execução. */
+/** Copia os dados da versão de um usuário só para o Lucas (uma única vez). */
+function migrateLegacyToLucas() {
+  if (currentUser !== 'lucas' || read(STORAGE_KEYS.workouts) !== undefined) return;
+  if (read(legacyKey('workouts')) === undefined) return;
+  for (const name of Object.keys(DATA_KEYS)) {
+    const value = read(legacyKey(name));
+    if (value !== undefined) write(STORAGE_KEYS[name], value);
+    write(legacyKey(name), null);
+  }
+}
+
+/** Grava os dados iniciais do usuário ativo no primeiro acesso dele. */
 export function initializeStorage() {
+  migrateLegacyToLucas();
+  const initial = seed();
   const isFirstRun = read(STORAGE_KEYS.workouts) === undefined;
-  if (read(STORAGE_KEYS.profile) === undefined) write(STORAGE_KEYS.profile, initialData.profile);
-  if (read(STORAGE_KEYS.exercises) === undefined) write(STORAGE_KEYS.exercises, initialData.exercises);
-  if (read(STORAGE_KEYS.workouts) === undefined) write(STORAGE_KEYS.workouts, initialData.workouts);
-  if (read(STORAGE_KEYS.sessions) === undefined) write(STORAGE_KEYS.sessions, initialData.sessions);
-  if (read(STORAGE_KEYS.records) === undefined) write(STORAGE_KEYS.records, initialData.records);
-  if (read(STORAGE_KEYS.bodyWeight) === undefined) write(STORAGE_KEYS.bodyWeight, initialData.bodyWeight);
+  if (read(STORAGE_KEYS.profile) === undefined) write(STORAGE_KEYS.profile, initial.profile);
+  if (read(STORAGE_KEYS.exercises) === undefined) write(STORAGE_KEYS.exercises, initial.exercises);
+  if (read(STORAGE_KEYS.workouts) === undefined) write(STORAGE_KEYS.workouts, initial.workouts);
+  if (read(STORAGE_KEYS.sessions) === undefined) write(STORAGE_KEYS.sessions, initial.sessions);
+  if (read(STORAGE_KEYS.records) === undefined) write(STORAGE_KEYS.records, initial.records);
+  if (read(STORAGE_KEYS.bodyWeight) === undefined) write(STORAGE_KEYS.bodyWeight, initial.bodyWeight);
 
   const version = read(STORAGE_KEYS.dataVersion);
-  if (!isFirstRun && (!isNumber(version) || version < DATA_VERSION)) migrateSeedData();
+  if (!isFirstRun) {
+    if (!isNumber(version) || version < 2) migrateSeedData();
+    if (!isNumber(version) || version < 3) migrateProfileFields();
+  }
   write(STORAGE_KEYS.dataVersion, DATA_VERSION);
 }
 
 /**
- * Atualiza treinos e exercícios para a versão atual dos dados iniciais,
+ * v2: troca treinos e exercícios pelos dados iniciais (PPL),
  * preservando histórico, séries registradas, peso corporal e perfil.
  */
 function migrateSeedData() {
+  const initial = seed();
   const sessions = readList(STORAGE_KEYS.sessions, validators.session, []);
   const records = readList(STORAGE_KEYS.records, validators.record, []);
   const usedIds = new Set([
     ...records.map((r) => r.exerciseId),
     ...sessions.flatMap((s) => s.exercises.map((e) => e.exerciseId)),
   ]);
-  const seedIds = new Set(initialData.exercises.map((e) => e.id));
+  const seedIds = new Set(initial.exercises.map((e) => e.id));
   // Exercícios antigos só são mantidos se fizerem parte do histórico
   const legacy = readList(STORAGE_KEYS.exercises, validators.exercise, []).filter(
     (e) => !seedIds.has(e.id) && usedIds.has(e.id),
   );
 
-  write(STORAGE_KEYS.exercises, [...initialData.exercises, ...legacy]);
-  write(STORAGE_KEYS.workouts, initialData.workouts);
+  write(STORAGE_KEYS.exercises, [...initial.exercises, ...legacy]);
+  write(STORAGE_KEYS.workouts, initial.workouts);
   write(STORAGE_KEYS.weekSelection, null);
 
   const profile = validators.profile(read(STORAGE_KEYS.profile));
-  if (profile && !profile.goal) write(STORAGE_KEYS.profile, { ...profile, goal: initialData.profile.goal });
+  if (profile && !profile.goal) write(STORAGE_KEYS.profile, { ...profile, goal: initial.profile.goal });
+}
+
+/** v3: novos campos do perfil (idade, foco, minutos de cardio). Treinos não são alterados. */
+function migrateProfileFields() {
+  const initial = seed();
+  const profile = validators.profile(read(STORAGE_KEYS.profile));
+  if (!profile) return;
+  write(STORAGE_KEYS.profile, {
+    ...profile,
+    cardioMinutes: profile.cardioMinutes ?? initial.profile.cardioMinutes,
+  });
 }
 
 // ---------- Dados pessoais ----------
 
-export const getProfile = () => validators.profile(read(STORAGE_KEYS.profile)) ?? { ...initialData.profile };
+export const getProfile = () => validators.profile(read(STORAGE_KEYS.profile)) ?? { ...seed().profile };
 export const saveProfile = (profile) => write(STORAGE_KEYS.profile, profile);
 
 // ---------- Exercícios ----------
 
-export const getExercises = () => readList(STORAGE_KEYS.exercises, validators.exercise, initialData.exercises);
+export const getExercises = () => readList(STORAGE_KEYS.exercises, validators.exercise, seed().exercises);
 export const saveExercises = (exercises) => write(STORAGE_KEYS.exercises, exercises);
 
 // ---------- Treinos ----------
 
-export const getWorkouts = () => readList(STORAGE_KEYS.workouts, validators.workout, initialData.workouts);
+export const getWorkouts = () => readList(STORAGE_KEYS.workouts, validators.workout, seed().workouts);
 export const saveWorkouts = (workouts) => write(STORAGE_KEYS.workouts, workouts);
 
 // ---------- Histórico (sessões e séries registradas) ----------
@@ -202,10 +279,12 @@ export const saveWeekSelection = (selection) => write(STORAGE_KEYS.weekSelection
 export const getBodyWeights = () => readList(STORAGE_KEYS.bodyWeight, validators.bodyWeight, []);
 export const saveBodyWeights = (entries) => write(STORAGE_KEYS.bodyWeight, entries);
 
-/** Carrega todos os dados do app de uma vez. */
-export function loadAll() {
+/** Carrega todos os dados de um usuário de uma vez. */
+export function loadAll(userId = currentUser) {
+  setActiveUser(userId);
   initializeStorage();
   return {
+    userId: currentUser,
     profile: getProfile(),
     exercises: getExercises(),
     workouts: getWorkouts(),

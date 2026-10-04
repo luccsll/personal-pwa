@@ -3,9 +3,8 @@ import ExerciseImage from './ExerciseImage';
 import Badge from './Badge';
 import { useAppData } from '@/hooks/useAppData';
 import { useExerciseMap } from '@/hooks/useDerivedData';
-import { formatWeight } from '@/utils/format';
 import { comparePerformance, getPreviousPerformance, getSessionSets } from '@/utils/stats';
-import { formatReps } from '@/utils/workout';
+import { formatReps, formatSetValue, repsUnit } from '@/utils/workout';
 import './SessionExercises.scss';
 
 /** Exercícios de um treino realizado com as cargas, repetições e RIR de cada série. */
@@ -27,7 +26,7 @@ export default function SessionExercises({ session }) {
               <div>
                 <h3>{exercise?.name ?? 'Exercício removido'}</h3>
                 <span className="secondary-text">
-                  {sets.length} de {item.sets} séries · {formatReps(item)} reps
+                  {sets.length} de {item.sets} séries · {formatReps(item)} {repsUnit(exercise)}
                 </span>
               </div>
               {sets.length >= item.sets && <CircleCheck size={20} className="session-exercises__check" />}
@@ -45,7 +44,7 @@ export default function SessionExercises({ session }) {
                   <li key={s.id}>
                     <span>Série {s.setNumber}</span>
                     <strong>
-                      {formatWeight(s.weight)} × {s.repetitions ?? '—'} reps
+                      {formatSetValue(s, exercise)}
                       {s.rir !== null && s.rir !== undefined && <small> · RIR {s.rir}</small>}
                     </strong>
                   </li>

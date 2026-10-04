@@ -1,4 +1,4 @@
-import { Clock, Dumbbell, Play, Repeat2, CircleCheck, Coffee, Moon, Sun } from 'lucide-react';
+import { Clock, Dumbbell, HeartPulse, Play, Repeat2, CircleCheck, Coffee, Moon, Sun } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import Button from './Button';
 import Badge from './Badge';
@@ -13,7 +13,7 @@ const STATUS = {
 };
 
 /** Card de destaque do treino do dia no início. */
-export default function FeaturedWorkoutCard({ workout, status = 'pending', onStart, onSwitch, canSwitch, nextWorkout }) {
+export default function FeaturedWorkoutCard({ workout, status = 'pending', onStart, onSwitch, canSwitch, nextWorkout, cardioMinutes }) {
   if (!workout) {
     return (
       <section className="featured-card featured-card--rest">
@@ -56,6 +56,11 @@ export default function FeaturedWorkoutCard({ workout, status = 'pending', onSta
         <span>
           <Clock size={16} /> ~{getWorkoutDuration(workout)} minutos
         </span>
+        {cardioMinutes > 0 && (
+          <span>
+            <HeartPulse size={16} /> {cardioMinutes} min de cardio
+          </span>
+        )}
         {workout.timeOfDay && (
           <span>
             {workout.timeOfDay === 'Manhã' ? <Sun size={16} /> : <Moon size={16} />} {workout.timeOfDay}

@@ -5,6 +5,7 @@ import { useAppData } from '@/hooks/useAppData';
 import { useActiveSession, useExerciseMap } from '@/hooks/useDerivedData';
 import PageHeader from '@/components/PageHeader';
 import ExerciseCard from '@/components/ExerciseCard';
+import CardioCard from '@/components/CardioCard';
 import Badge from '@/components/Badge';
 import Button from '@/components/Button';
 import Modal from '@/components/Modal';
@@ -17,7 +18,7 @@ import './WorkoutDetailsPage.scss';
 export default function WorkoutDetailsPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { workouts, sessions, records, startSession, deleteSession } = useAppData();
+  const { profile, workouts, sessions, records, startSession, deleteSession } = useAppData();
   const exerciseMap = useExerciseMap();
   const activeSession = useActiveSession();
   const [conflictOpen, setConflictOpen] = useState(false);
@@ -86,6 +87,7 @@ export default function WorkoutDetailsPage() {
               to={`/exercicios/${item.exerciseId}`}
             />
           ))}
+          <CardioCard minutes={profile.cardioMinutes} />
         </div>
       </section>
 

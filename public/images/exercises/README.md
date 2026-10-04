@@ -2,6 +2,7 @@
 
 Coloque aqui as fotos dos exercícios em **JPG**, com o mesmo nome do `id` do exercício
 (definido em `src/data/exercises.js`). Recomendado: proporção **1:1** (ex.: 800×800).
+As imagens são compartilhadas entre Lucas e Anthony.
 
 Enquanto uma imagem não existir, o app mostra automaticamente `placeholder.jpg`.
 
@@ -45,6 +46,9 @@ stiff-halteres.jpg                Stiff com halteres
 cadeira-flexora.jpg               Cadeira flexora
 elevacao-pelvica.jpg              Elevação pélvica
 panturrilha-sentado.jpg           Panturrilha sentado
+maquina-abdominal.jpg             Máquina abdominal
+elevacao-pernas.jpg               Elevação de pernas
+prancha.jpg                       Prancha
 ```
 
 Exercícios criados pelo app seguem a mesma regra: o nome do arquivo é o nome do

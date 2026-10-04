@@ -4,6 +4,7 @@ import { CalendarDays, Clock, Dumbbell, Layers, Trash2 } from 'lucide-react';
 import { useAppData } from '@/hooks/useAppData';
 import PageHeader from '@/components/PageHeader';
 import SessionExercises from '@/components/SessionExercises';
+import CardioCard from '@/components/CardioCard';
 import Button from '@/components/Button';
 import Modal from '@/components/Modal';
 import StatCard from '@/components/StatCard';
@@ -13,7 +14,7 @@ import { formatNumber, joinMuscleGroups } from '@/utils/format';
 export default function HistoryDetailsPage() {
   const { sessionId } = useParams();
   const navigate = useNavigate();
-  const { sessions, records, deleteSession } = useAppData();
+  const { sessions, records, deleteSession, setSessionCardio } = useAppData();
   const [confirmOpen, setConfirmOpen] = useState(false);
 
   const session = sessions.find((s) => s.id === sessionId && s.completed);
@@ -42,6 +43,12 @@ export default function HistoryDetailsPage() {
         <StatCard icon={Dumbbell} label="Exercícios" value={session.exercises.length} />
         <StatCard icon={Layers} label="Volume total" value={`${formatNumber(volume)} kg`} hint={`${sets.length} séries`} />
       </div>
+
+      <CardioCard
+        minutes={session.cardioMinutes}
+        done={Boolean(session.cardioDone)}
+        onToggle={() => setSessionCardio(session.id, !session.cardioDone)}
+      />
 
       <section className="section">
         <h2>Exercícios</h2>

@@ -12,6 +12,7 @@ import { formatDate } from '@/utils/date';
 import { formatWeight } from '@/utils/format';
 import { getExerciseHistory, getExerciseSummary } from '@/utils/stats';
 import { muscleGroupColor } from '@/utils/muscleGroups';
+import { formatSetValue } from '@/utils/workout';
 import './ExerciseDetailsPage.scss';
 
 export default function ExerciseDetailsPage() {
@@ -47,7 +48,7 @@ export default function ExerciseDetailsPage() {
             {summary ? (
               <>
                 <strong>
-                  {formatWeight(summary.last.lastSet.weight)} × {summary.last.lastSet.repetitions ?? '—'} reps
+                  {formatSetValue(summary.last.lastSet, exercise)}
                 </strong>
                 <span className="muted">{formatDate(summary.last.date)}</span>
               </>

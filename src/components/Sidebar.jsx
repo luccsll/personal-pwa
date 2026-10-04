@@ -1,9 +1,13 @@
-import { NavLink } from 'react-router-dom';
-import { Dumbbell } from 'lucide-react';
+import { Link, NavLink } from 'react-router-dom';
+import { ArrowLeftRight, Dumbbell } from 'lucide-react';
+import { useAppData } from '@/hooks/useAppData';
+import UserAvatar from './UserAvatar';
 import { NAV_ITEMS, SIDEBAR_EXTRA_ITEMS } from './navItems';
 import './Sidebar.scss';
 
 export default function Sidebar() {
+  const { userId, profile } = useAppData();
+
   return (
     <aside className="sidebar">
       <div className="sidebar__brand">
@@ -20,6 +24,14 @@ export default function Sidebar() {
           </NavLink>
         ))}
       </nav>
+      <Link to="/trocar-usuario" className="sidebar__user" title="Trocar usuário">
+        <UserAvatar userId={userId} name={profile.name} />
+        <span>
+          <strong>{profile.name}</strong>
+          <small>Trocar usuário</small>
+        </span>
+        <ArrowLeftRight size={16} />
+      </Link>
     </aside>
   );
 }

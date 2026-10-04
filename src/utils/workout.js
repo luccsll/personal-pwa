@@ -1,3 +1,5 @@
+import { formatWeight } from './format';
+
 import { getWeekStart } from './date';
 
 export const OPTION_LETTERS = ['A', 'B', 'C', 'D', 'E', 'F'];
@@ -43,4 +45,15 @@ export const topOfRange = (item) => item?.repetitionsMax ?? item?.repetitions ??
 export function formatRest(seconds = 0) {
   const s = Math.max(0, Math.round(seconds));
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+}
+
+/** Exercícios registrados em segundos (ex.: prancha) em vez de repetições. */
+export const isTimed = (exercise) => exercise?.unit === 'seconds';
+
+export const repsUnit = (exercise) => (isTimed(exercise) ? 's' : 'reps');
+
+/** "30 kg × 10" ou "45 s" para exercícios por tempo. */
+export function formatSetValue(set, exercise) {
+  if (isTimed(exercise)) return `${set.repetitions ?? '—'} s`;
+  return `${formatWeight(set.weight)} × ${set.repetitions ?? '—'}`;
 }

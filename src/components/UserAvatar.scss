@@ -1,0 +1,31 @@
+.user-avatar {
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
+  border-radius: 50%;
+  font-weight: 700;
+  color: var(--text-inverse);
+  background: linear-gradient(135deg, var(--primary-400), var(--primary-600));
+
+  &--anthony {
+    background: linear-gradient(135deg, var(--mg-legs), var(--mg-back));
+  }
+
+  &--sm {
+    width: 28px;
+    height: 28px;
+    font-size: var(--fs-sm);
+  }
+
+  &--md {
+    width: 40px;
+    height: 40px;
+    font-size: var(--fs-body-lg);
+  }
+
+  &--lg {
+    width: 64px;
+    height: 64px;
+    font-size: var(--fs-title);
+  }
+}

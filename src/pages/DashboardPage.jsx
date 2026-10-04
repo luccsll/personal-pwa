@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Dumbbell, Flame, Play, Scale, Trophy, TrendingDown, TrendingUp, User } from 'lucide-react';
+import { Dumbbell, Flame, Play, Scale, Trophy, TrendingDown, TrendingUp } from 'lucide-react';
 import { useAppData } from '@/hooks/useAppData';
 import { useActiveSession, useBodyWeightStats, useCompletedSessions, useTodayWorkout } from '@/hooks/useDerivedData';
 import FeaturedWorkoutCard from '@/components/FeaturedWorkoutCard';
@@ -9,6 +9,7 @@ import StatCard from '@/components/StatCard';
 import WeeklyProgress from '@/components/WeeklyProgress';
 import WorkoutHistory from '@/components/WorkoutHistory';
 import ProgressBar from '@/components/ProgressBar';
+import UserAvatar from '@/components/UserAvatar';
 import { WEEK_DAYS, dayLabel, formatDate, formatLongDate, formatShortDate, getGreeting, toDateKey } from '@/utils/date';
 import { formatSigned, formatWeight } from '@/utils/format';
 import { getPersonalRecords, getStreak, getWeekProgress } from '@/utils/stats';
@@ -17,7 +18,7 @@ import './DashboardPage.scss';
 
 export default function DashboardPage() {
   const navigate = useNavigate();
-  const { profile, workouts, sessions, records, exercises, weekSelection, startSession, selectWorkoutForDay } = useAppData();
+  const { userId, profile, workouts, sessions, records, exercises, weekSelection, startSession, selectWorkoutForDay } = useAppData();
   const todayWorkout = useTodayWorkout();
   const activeSession = useActiveSession();
   const completed = useCompletedSessions();
@@ -68,14 +69,11 @@ export default function DashboardPage() {
       <header className="dashboard__header">
         <div>
           <p className="dashboard__date">{formatLongDate(today)}</p>
-          <h1>
-            {getGreeting(today).replace('!', '')}
-            {profile.name ? `, ${profile.name}` : ''}!
-          </h1>
-          <p className="dashboard__subtitle">Vamos treinar?</p>
+          <h1>Olá, {profile.name || 'atleta'} 👋</h1>
+          <p className="dashboard__subtitle">{getGreeting(today)} Seu treino de hoje:</p>
         </div>
         <Link to="/perfil" className="dashboard__avatar" aria-label="Meus dados">
-          {profile.name ? profile.name.charAt(0).toUpperCase() : <User size={20} />}
+          <UserAvatar userId={userId} name={profile.name} size="lg" />
         </Link>
       </header>
 
@@ -101,6 +99,7 @@ export default function DashboardPage() {
             canSwitch={todayOptions.length > 1}
             onSwitch={() => setSwitchOpen(true)}
             nextWorkout={nextWorkout}
+            cardioMinutes={profile.cardioMinutes}
           />
 
           <div className="grid-3">
