@@ -1,0 +1,65 @@
+.session-exercises {
+  display: grid;
+  gap: var(--space-md);
+
+  @include desktop {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+
+  &__item {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+
+    header {
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+
+      > div:not(.exercise-image) {
+        flex: 1;
+        min-width: 0;
+      }
+
+      span {
+        font-size: var(--fs-sm);
+      }
+    }
+  }
+
+  &__image.exercise-image {
+    width: 52px;
+    border-radius: var(--radius-md);
+  }
+
+  &__check {
+    color: var(--success);
+  }
+
+  &__sets {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    li {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 12px;
+      border-radius: var(--radius-md);
+      background: var(--bg-secondary);
+      font-size: var(--fs-body);
+
+      span {
+        color: var(--text-secondary);
+      }
+    }
+  }
+
+  &__empty {
+    font-size: var(--fs-sm);
+  }
+}

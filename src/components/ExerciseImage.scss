@@ -1,0 +1,38 @@
+.exercise-image {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  width: 100%;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: var(--primary-50);
+  flex-shrink: 0;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  &__fallback {
+    width: 100%;
+    height: 100%;
+    display: grid;
+    place-items: center;
+    color: var(--mg-color);
+    background: linear-gradient(145deg, var(--primary-50), var(--primary-100));
+
+    svg {
+      width: 40%;
+      height: 40%;
+      opacity: 0.8;
+    }
+  }
+
+  &--wide {
+    aspect-ratio: 4 / 3;
+
+    @include tablet {
+      aspect-ratio: 16 / 10;
+    }
+  }
+}

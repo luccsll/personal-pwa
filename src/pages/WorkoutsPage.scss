@@ -1,0 +1,72 @@
+.workouts-week {
+  display: grid;
+  gap: var(--space-md);
+
+  @include desktop {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+}
+
+.day-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+
+  &--today {
+    border-color: var(--primary-200);
+  }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    min-height: 32px;
+
+    h2 {
+      font-size: var(--fs-sm);
+      letter-spacing: 0.08em;
+      color: var(--text-secondary);
+    }
+  }
+
+  &__switch.btn {
+    margin-left: auto;
+    height: 32px;
+    padding: 0 10px;
+    color: var(--primary-500);
+    font-size: var(--fs-sm);
+  }
+
+  &__options {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+  }
+
+  &__rest {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-md);
+    border-radius: var(--radius-lg);
+    background: var(--bg-secondary);
+    color: var(--text-muted);
+    font-weight: 600;
+  }
+
+  &__add {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    align-self: flex-start;
+    min-height: 32px;
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    color: var(--text-muted);
+
+    &:hover {
+      color: var(--primary-500);
+    }
+  }
+}

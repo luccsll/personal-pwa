@@ -1,0 +1,30 @@
+.weight-chart {
+  width: 100%;
+
+  &--empty {
+    display: grid;
+    place-items: center;
+    padding: var(--space-lg);
+    border-radius: var(--radius-lg);
+    background: var(--bg-secondary);
+    color: var(--text-muted);
+    font-size: var(--fs-sm);
+    text-align: center;
+  }
+
+  &__tooltip {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 8px 12px;
+    border-radius: var(--radius-md);
+    background: var(--text-primary);
+    color: var(--text-inverse);
+    font-size: var(--fs-sm);
+    box-shadow: var(--shadow-floating);
+
+    span {
+      opacity: 0.7;
+    }
+  }
+}

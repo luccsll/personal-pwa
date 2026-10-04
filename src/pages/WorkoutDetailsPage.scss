@@ -1,0 +1,55 @@
+.workout-details {
+  &__groups {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-sm);
+    margin-top: calc(var(--space-sm) * -1);
+  }
+
+  &__stat {
+    @include card;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: var(--space-md) var(--space-sm);
+    border-radius: 18px;
+
+    svg {
+      color: var(--primary-500);
+      margin-bottom: 4px;
+    }
+
+    strong {
+      font-size: var(--fs-subtitle);
+    }
+
+    span {
+      font-size: var(--fs-sm);
+      color: var(--text-secondary);
+    }
+  }
+
+  &__list {
+    display: grid;
+    gap: var(--space-md);
+
+    @include desktop {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  &__cta {
+    position: sticky;
+    bottom: calc(var(--bottom-nav-space) + 4px);
+    z-index: 10;
+    padding-top: var(--space-sm);
+
+    @include tablet {
+      bottom: var(--space-xl);
+      max-width: 360px;
+      margin-left: auto;
+      width: 100%;
+    }
+  }
+}

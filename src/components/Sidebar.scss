@@ -1,0 +1,66 @@
+.sidebar {
+  display: none;
+
+  @include tablet {
+    position: sticky;
+    top: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2xl);
+    width: 232px;
+    height: 100vh;
+    padding: var(--space-2xl) var(--space-lg);
+    background: var(--bg-card);
+    border-right: 1px solid var(--border-light);
+    flex-shrink: 0;
+  }
+
+  &__brand {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    padding: 0 var(--space-sm);
+    font-size: var(--fs-subtitle);
+    font-weight: 700;
+  }
+
+  &__logo {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-md);
+    background: var(--primary-500);
+    color: var(--text-inverse);
+    box-shadow: var(--shadow-primary);
+  }
+
+  &__nav {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  &__item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    height: 48px;
+    padding: 0 var(--space-md);
+    border-radius: var(--radius-md);
+    color: var(--text-secondary);
+    font-weight: 500;
+    transition: background var(--transition), color var(--transition);
+
+    &:hover {
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+    }
+
+    &.active {
+      background: var(--primary-50);
+      color: var(--primary-500);
+      font-weight: 600;
+    }
+  }
+}

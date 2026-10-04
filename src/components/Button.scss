@@ -1,0 +1,106 @@
+.btn {
+  @include pressable;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  height: 44px;
+  min-width: 44px;
+  padding: 0 16px;
+  border-radius: var(--radius-button);
+  font-size: var(--fs-body);
+  font-weight: 600;
+  white-space: nowrap;
+  user-select: none;
+
+  @media (hover: hover) {
+    &:hover:not(:disabled) {
+      transform: translateY(-1px);
+    }
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  &--block {
+    width: 100%;
+  }
+
+  &--icon {
+    padding: 0;
+    width: 44px;
+  }
+
+  &--lg {
+    height: 56px;
+    padding: 0 24px;
+    font-size: var(--fs-body-lg);
+    border-radius: 14px;
+
+    &.btn--icon {
+      width: 56px;
+    }
+  }
+
+  &--primary {
+    height: 48px;
+    background: var(--primary-500);
+    color: var(--text-inverse);
+    box-shadow: var(--shadow-primary);
+
+    &.btn--lg {
+      height: 56px;
+    }
+
+    @media (hover: hover) {
+      &:hover:not(:disabled) {
+        background: var(--primary-600);
+      }
+    }
+  }
+
+  &--secondary {
+    background: var(--primary-50);
+    color: var(--primary-500);
+
+    @media (hover: hover) {
+      &:hover:not(:disabled) {
+        background: var(--primary-100);
+      }
+    }
+  }
+
+  &--ghost {
+    color: var(--text-secondary);
+
+    @media (hover: hover) {
+      &:hover:not(:disabled) {
+        background: var(--bg-secondary);
+      }
+    }
+  }
+
+  &--light {
+    background: var(--bg-card);
+    color: var(--primary-500);
+    box-shadow: 0 4px 12px rgba(18, 40, 90, 0.18);
+  }
+
+  &--success {
+    height: 48px;
+    background: var(--success);
+    color: var(--text-inverse);
+    box-shadow: 0 6px 16px rgba(66, 184, 131, 0.25);
+
+    &.btn--lg {
+      height: 56px;
+    }
+  }
+
+  &--danger {
+    background: var(--danger-bg);
+    color: var(--danger);
+  }
+}
